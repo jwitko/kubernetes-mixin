@@ -67,6 +67,39 @@ def replace_in_file(file_path, recording_rules):
         
         content = re.sub(pattern, replace_match, content)
     
+    # Clean up any multi-line expressions in JSON to ensure they're properly formatted for Grafana
+    if file_path.endswith('.json'):
+        # Look for expr fields in JSON and ensure their values don't contain newlines
+        try:
+            data = json.loads(content)
+            modified = False
+            
+            def clean_expr_in_object(obj):
+                nonlocal modified
+                if isinstance(obj, dict):
+                    for key, value in obj.items():
+                        if key == 'expr' and isinstance(value, str):
+                            # Replace newlines and normalize whitespace
+                            cleaned_value = re.sub(r'\s+', ' ', value).strip()
+                            if cleaned_value != value:
+                                obj[key] = cleaned_value
+                                modified = True
+                        elif isinstance(value, (dict, list)):
+                            clean_expr_in_object(value)
+                elif isinstance(obj, list):
+                    for item in obj:
+                        if isinstance(item, (dict, list)):
+                            clean_expr_in_object(item)
+            
+            clean_expr_in_object(data)
+            
+            if modified:
+                content = json.dumps(data, indent=3)
+                replacements_made = True
+                print(f"  - Cleaned up multi-line expressions in {file_path}")
+        except json.JSONDecodeError:
+            print(f"  - Warning: Could not parse JSON in {file_path}, skipping cleanup")
+    
     # Write back only if changes were made
     if replacements_made:
         with open(file_path, 'w') as f:
@@ -79,8 +112,9 @@ def process_all_files(recording_rules):
     """Process all dashboard and alert files to replace recording rule references."""
     dashboard_files = glob.glob('dashboards/**/*.libsonnet', recursive=True)
     alert_files = glob.glob('alerts/*.libsonnet')
+    json_files = glob.glob('dashboards_out/*.json')
     
-    all_files = dashboard_files + alert_files
+    all_files = dashboard_files + alert_files + json_files
     
     total_files = len(all_files)
     updated_files = 0

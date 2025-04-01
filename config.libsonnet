@@ -29,7 +29,6 @@
     podLabel: 'pod',
     hostNetworkInterfaceSelector: 'device!~"veth.+"',
     hostMountpointSelector: 'mountpoint="/"',
-    windowsExporterSelector: 'job="kubernetes-windows-exporter"',
     containerfsSelector: 'container!=""',
 
     // List of labels to join for different type of metrics
@@ -52,13 +51,8 @@
       'k8s-resources-namespace.json': std.md5('k8s-resources-namespace.json'),
       'k8s-resources-node.json': std.md5('k8s-resources-node.json'),
       'k8s-resources-pod.json': std.md5('k8s-resources-pod.json'),
-      'k8s-resources-windows-cluster.json': std.md5('k8s-resources-windows-cluster.json'),
-      'k8s-resources-windows-namespace.json': std.md5('k8s-resources-windows-namespace.json'),
-      'k8s-resources-windows-pod.json': std.md5('k8s-resources-windows-pod.json'),
       'k8s-resources-workload.json': std.md5('k8s-resources-workload.json'),
       'k8s-resources-workloads-namespace.json': std.md5('k8s-resources-workloads-namespace.json'),
-      'k8s-windows-cluster-rsrc-use.json': std.md5('k8s-windows-cluster-rsrc-use.json'),
-      'k8s-windows-node-rsrc-use.json': std.md5('k8s-windows-node-rsrc-use.json'),
       'kubelet.json': std.md5('kubelet.json'),
       'namespace-by-pod.json': std.md5('namespace-by-pod.json'),
       'namespace-by-workload.json': std.md5('namespace-by-workload.json'),
