@@ -15,12 +15,14 @@ TOOLING=$(JB_BIN) $(JSONNETLINT_BIN) $(JSONNET_BIN) $(JSONNETFMT_BIN) $(PROMTOOL
 JSONNETFMT_ARGS=-n 2 --max-blank-lines 2 --string-style s --comment-style s
 SRC_DIR ?=dashboards
 OUT_DIR ?=dashboards_out
+GRAFANA_ALERTS_OUT_DIR ?=grafana_alerts_out
+GRAFANA_RULES_OUT_DIR ?=grafana_rules_out
 
 .PHONY: all
 all: fmt generate lint test
 
 .PHONY: generate
-generate: prometheus_alerts.yaml prometheus_rules.yaml $(OUT_DIR) grafana_alerts.json
+generate: prometheus_alerts.yaml prometheus_rules.yaml $(OUT_DIR) $(GRAFANA_ALERTS_OUT_DIR) $(GRAFANA_RULES_OUT_DIR)
 
 $(JSONNET_VENDOR): $(JB_BIN) jsonnetfile.json
 	$(JB_BIN) install
@@ -43,9 +45,15 @@ prometheus_alerts.yaml: $(JSONNET_BIN) mixin.libsonnet lib/alerts.jsonnet alerts
 prometheus_rules.yaml: $(JSONNET_BIN) mixin.libsonnet lib/rules.jsonnet rules/*.libsonnet
 	@$(JSONNET_BIN) -J vendor -S lib/rules.jsonnet > $@
 
-# Target for generating Grafana alerts JSON
-grafana_alerts.json: $(JSONNET_BIN) mixin.libsonnet lib/grafana_alerts.jsonnet alerts/*.libsonnet
-	@$(JSONNET_BIN) -J vendor -S lib/grafana_alerts.jsonnet > $@
+# Target for generating Grafana alerts as separate files per group
+$(GRAFANA_ALERTS_OUT_DIR): $(JSONNET_BIN) mixin.libsonnet lib/grafana_alerts_split.jsonnet alerts/*.libsonnet
+	@mkdir -p $(GRAFANA_ALERTS_OUT_DIR)
+	@$(JSONNET_BIN) -J vendor -m $(GRAFANA_ALERTS_OUT_DIR) lib/grafana_alerts_split.jsonnet
+
+# Target for generating Grafana recording rules as separate files per group
+$(GRAFANA_RULES_OUT_DIR): $(JSONNET_BIN) mixin.libsonnet lib/grafana_rules_split.jsonnet rules/*.libsonnet
+	@mkdir -p $(GRAFANA_RULES_OUT_DIR)
+	@$(JSONNET_BIN) -J vendor -m $(GRAFANA_RULES_OUT_DIR) lib/grafana_rules_split.jsonnet
 
 $(OUT_DIR): $(JSONNET_BIN) $(JSONNET_VENDOR) mixin.libsonnet lib/dashboards.jsonnet $(SRC_DIR)/*.libsonnet
 	@mkdir -p $(OUT_DIR)

@@ -1,0 +1,1120 @@
+[
+    {
+        "interval": "3m",
+        "name": "kube-apiserver-availability.rules",
+        "rules": [
+            {
+                "name": "code_verb:apiserver_request_total:increase30d",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "avg_over_time(code_verb:apiserver_request_total:increase1h[30d]) * 24 * 30\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "labels": {
+                    "verb": "read"
+                },
+                "name": "code:apiserver_request_total:increase30d",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "sum by (cluster, code) (code_verb:apiserver_request_total:increase30d{verb=~\"LIST|GET\"})\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "labels": {
+                    "verb": "write"
+                },
+                "name": "code:apiserver_request_total:increase30d",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "sum by (cluster, code) (code_verb:apiserver_request_total:increase30d{verb=~\"POST|PUT|PATCH|DELETE\"})\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": "cluster_verb_scope_le:apiserver_request_sli_duration_seconds_bucket:increase1h",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "sum by (cluster, verb, scope, le) (increase(apiserver_request_sli_duration_seconds_bucket[1h]))\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": "cluster_verb_scope_le:apiserver_request_sli_duration_seconds_bucket:increase30d",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "sum by (cluster, verb, scope, le) (avg_over_time(cluster_verb_scope_le:apiserver_request_sli_duration_seconds_bucket:increase1h[30d]) * 24 * 30)\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": "cluster_verb_scope:apiserver_request_sli_duration_seconds_count:increase1h",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "sum by (cluster, verb, scope) (cluster_verb_scope_le:apiserver_request_sli_duration_seconds_bucket:increase1h{le=\"+Inf\"})\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": "cluster_verb_scope:apiserver_request_sli_duration_seconds_count:increase30d",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "sum by (cluster, verb, scope) (cluster_verb_scope_le:apiserver_request_sli_duration_seconds_bucket:increase30d{le=\"+Inf\"})\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "labels": {
+                    "verb": "all"
+                },
+                "name": "apiserver_request:availability30d",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "1 - (\n  (\n    # write too slow\n    sum by (cluster) (cluster_verb_scope:apiserver_request_sli_duration_seconds_count:increase30d{verb=~\"POST|PUT|PATCH|DELETE\"})\n    -\n    sum by (cluster) (cluster_verb_scope_le:apiserver_request_sli_duration_seconds_bucket:increase30d{verb=~\"POST|PUT|PATCH|DELETE\",le=~\"1(\\\\.0)?\"} or vector(0))\n  ) +\n  (\n    # read too slow\n    sum by (cluster) (cluster_verb_scope:apiserver_request_sli_duration_seconds_count:increase30d{verb=~\"LIST|GET\"})\n    -\n    (\n      sum by (cluster) (cluster_verb_scope_le:apiserver_request_sli_duration_seconds_bucket:increase30d{verb=~\"LIST|GET\",scope=~\"resource|\",le=~\"1(\\\\.0)?\"} or vector(0))\n      +\n      sum by (cluster) (cluster_verb_scope_le:apiserver_request_sli_duration_seconds_bucket:increase30d{verb=~\"LIST|GET\",scope=\"namespace\",le=~\"5(\\\\.0)?\"} or vector(0))\n      +\n      sum by (cluster) (cluster_verb_scope_le:apiserver_request_sli_duration_seconds_bucket:increase30d{verb=~\"LIST|GET\",scope=\"cluster\",le=~\"30(\\\\.0)?\"} or vector(0))\n    )\n  ) +\n  # errors\n  sum by (cluster) (code:apiserver_request_total:increase30d{code=~\"5..\"} or vector(0))\n)\n/\nsum by (cluster) (code:apiserver_request_total:increase30d)\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "labels": {
+                    "verb": "read"
+                },
+                "name": "apiserver_request:availability30d",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "1 - (\n  sum by (cluster) (cluster_verb_scope:apiserver_request_sli_duration_seconds_count:increase30d{verb=~\"LIST|GET\"})\n  -\n  (\n    # too slow\n    sum by (cluster) (cluster_verb_scope_le:apiserver_request_sli_duration_seconds_bucket:increase30d{verb=~\"LIST|GET\",scope=~\"resource|\",le=~\"1(\\\\.0)?\"} or vector(0))\n    +\n    sum by (cluster) (cluster_verb_scope_le:apiserver_request_sli_duration_seconds_bucket:increase30d{verb=~\"LIST|GET\",scope=\"namespace\",le=~\"5(\\\\.0)?\"} or vector(0))\n    +\n    sum by (cluster) (cluster_verb_scope_le:apiserver_request_sli_duration_seconds_bucket:increase30d{verb=~\"LIST|GET\",scope=\"cluster\",le=~\"30(\\\\.0)?\"} or vector(0))\n  )\n  +\n  # errors\n  sum by (cluster) (code:apiserver_request_total:increase30d{verb=\"read\",code=~\"5..\"} or vector(0))\n)\n/\nsum by (cluster) (code:apiserver_request_total:increase30d{verb=\"read\"})\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "labels": {
+                    "verb": "write"
+                },
+                "name": "apiserver_request:availability30d",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "1 - (\n  (\n    # too slow\n    sum by (cluster) (cluster_verb_scope:apiserver_request_sli_duration_seconds_count:increase30d{verb=~\"POST|PUT|PATCH|DELETE\"})\n    -\n    sum by (cluster) (cluster_verb_scope_le:apiserver_request_sli_duration_seconds_bucket:increase30d{verb=~\"POST|PUT|PATCH|DELETE\",le=~\"1(\\\\.0)?\"} or vector(0))\n  )\n  +\n  # errors\n  sum by (cluster) (code:apiserver_request_total:increase30d{verb=\"write\",code=~\"5..\"} or vector(0))\n)\n/\nsum by (cluster) (code:apiserver_request_total:increase30d{verb=\"write\"})\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "labels": {
+                    "verb": "read"
+                },
+                "name": "code_resource:apiserver_request_total:rate5m",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "sum by (cluster,code,resource) (rate(apiserver_request_total{job=\"kube-apiserver\",verb=~\"LIST|GET\"}[5m]))\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "labels": {
+                    "verb": "write"
+                },
+                "name": "code_resource:apiserver_request_total:rate5m",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "sum by (cluster,code,resource) (rate(apiserver_request_total{job=\"kube-apiserver\",verb=~\"POST|PUT|PATCH|DELETE\"}[5m]))\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": "code_verb:apiserver_request_total:increase1h",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "sum by (cluster, code, verb) (increase(apiserver_request_total{job=\"kube-apiserver\",verb=~\"LIST|GET|POST|PUT|PATCH|DELETE\",code=~\"2..\"}[1h]))\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": "code_verb:apiserver_request_total:increase1h",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "sum by (cluster, code, verb) (increase(apiserver_request_total{job=\"kube-apiserver\",verb=~\"LIST|GET|POST|PUT|PATCH|DELETE\",code=~\"3..\"}[1h]))\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": "code_verb:apiserver_request_total:increase1h",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "sum by (cluster, code, verb) (increase(apiserver_request_total{job=\"kube-apiserver\",verb=~\"LIST|GET|POST|PUT|PATCH|DELETE\",code=~\"4..\"}[1h]))\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": "code_verb:apiserver_request_total:increase1h",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "sum by (cluster, code, verb) (increase(apiserver_request_total{job=\"kube-apiserver\",verb=~\"LIST|GET|POST|PUT|PATCH|DELETE\",code=~\"5..\"}[1h]))\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            }
+        ]
+    },
+    {
+        "interval": "1m",
+        "name": "kube-apiserver-burnrate.rules",
+        "rules": [
+            {
+                "labels": {
+                    "verb": "read"
+                },
+                "name": "apiserver_request:burnrate1d",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "(\n  (\n    # too slow\n    sum by (cluster) (rate(apiserver_request_sli_duration_seconds_count{job=\"kube-apiserver\",verb=~\"LIST|GET\",subresource!~\"proxy|attach|log|exec|portforward\"}[1d]))\n    -\n    (\n      (\n        sum by (cluster) (rate(apiserver_request_sli_duration_seconds_bucket{job=\"kube-apiserver\",verb=~\"LIST|GET\",subresource!~\"proxy|attach|log|exec|portforward\",scope=~\"resource|\",le=~\"1(\\\\.0)?\"}[1d]))\n        or\n        vector(0)\n      )\n      +\n      sum by (cluster) (rate(apiserver_request_sli_duration_seconds_bucket{job=\"kube-apiserver\",verb=~\"LIST|GET\",subresource!~\"proxy|attach|log|exec|portforward\",scope=\"namespace\",le=~\"5(\\\\.0)?\"}[1d]))\n      +\n      sum by (cluster) (rate(apiserver_request_sli_duration_seconds_bucket{job=\"kube-apiserver\",verb=~\"LIST|GET\",subresource!~\"proxy|attach|log|exec|portforward\",scope=\"cluster\",le=~\"30(\\\\.0)?\"}[1d]))\n    )\n  )\n  +\n  # errors\n  sum by (cluster) (rate(apiserver_request_total{job=\"kube-apiserver\",verb=~\"LIST|GET\",code=~\"5..\"}[1d]))\n)\n/\nsum by (cluster) (rate(apiserver_request_total{job=\"kube-apiserver\",verb=~\"LIST|GET\"}[1d]))\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "labels": {
+                    "verb": "read"
+                },
+                "name": "apiserver_request:burnrate1h",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "(\n  (\n    # too slow\n    sum by (cluster) (rate(apiserver_request_sli_duration_seconds_count{job=\"kube-apiserver\",verb=~\"LIST|GET\",subresource!~\"proxy|attach|log|exec|portforward\"}[1h]))\n    -\n    (\n      (\n        sum by (cluster) (rate(apiserver_request_sli_duration_seconds_bucket{job=\"kube-apiserver\",verb=~\"LIST|GET\",subresource!~\"proxy|attach|log|exec|portforward\",scope=~\"resource|\",le=~\"1(\\\\.0)?\"}[1h]))\n        or\n        vector(0)\n      )\n      +\n      sum by (cluster) (rate(apiserver_request_sli_duration_seconds_bucket{job=\"kube-apiserver\",verb=~\"LIST|GET\",subresource!~\"proxy|attach|log|exec|portforward\",scope=\"namespace\",le=~\"5(\\\\.0)?\"}[1h]))\n      +\n      sum by (cluster) (rate(apiserver_request_sli_duration_seconds_bucket{job=\"kube-apiserver\",verb=~\"LIST|GET\",subresource!~\"proxy|attach|log|exec|portforward\",scope=\"cluster\",le=~\"30(\\\\.0)?\"}[1h]))\n    )\n  )\n  +\n  # errors\n  sum by (cluster) (rate(apiserver_request_total{job=\"kube-apiserver\",verb=~\"LIST|GET\",code=~\"5..\"}[1h]))\n)\n/\nsum by (cluster) (rate(apiserver_request_total{job=\"kube-apiserver\",verb=~\"LIST|GET\"}[1h]))\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "labels": {
+                    "verb": "read"
+                },
+                "name": "apiserver_request:burnrate2h",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "(\n  (\n    # too slow\n    sum by (cluster) (rate(apiserver_request_sli_duration_seconds_count{job=\"kube-apiserver\",verb=~\"LIST|GET\",subresource!~\"proxy|attach|log|exec|portforward\"}[2h]))\n    -\n    (\n      (\n        sum by (cluster) (rate(apiserver_request_sli_duration_seconds_bucket{job=\"kube-apiserver\",verb=~\"LIST|GET\",subresource!~\"proxy|attach|log|exec|portforward\",scope=~\"resource|\",le=~\"1(\\\\.0)?\"}[2h]))\n        or\n        vector(0)\n      )\n      +\n      sum by (cluster) (rate(apiserver_request_sli_duration_seconds_bucket{job=\"kube-apiserver\",verb=~\"LIST|GET\",subresource!~\"proxy|attach|log|exec|portforward\",scope=\"namespace\",le=~\"5(\\\\.0)?\"}[2h]))\n      +\n      sum by (cluster) (rate(apiserver_request_sli_duration_seconds_bucket{job=\"kube-apiserver\",verb=~\"LIST|GET\",subresource!~\"proxy|attach|log|exec|portforward\",scope=\"cluster\",le=~\"30(\\\\.0)?\"}[2h]))\n    )\n  )\n  +\n  # errors\n  sum by (cluster) (rate(apiserver_request_total{job=\"kube-apiserver\",verb=~\"LIST|GET\",code=~\"5..\"}[2h]))\n)\n/\nsum by (cluster) (rate(apiserver_request_total{job=\"kube-apiserver\",verb=~\"LIST|GET\"}[2h]))\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "labels": {
+                    "verb": "read"
+                },
+                "name": "apiserver_request:burnrate30m",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "(\n  (\n    # too slow\n    sum by (cluster) (rate(apiserver_request_sli_duration_seconds_count{job=\"kube-apiserver\",verb=~\"LIST|GET\",subresource!~\"proxy|attach|log|exec|portforward\"}[30m]))\n    -\n    (\n      (\n        sum by (cluster) (rate(apiserver_request_sli_duration_seconds_bucket{job=\"kube-apiserver\",verb=~\"LIST|GET\",subresource!~\"proxy|attach|log|exec|portforward\",scope=~\"resource|\",le=~\"1(\\\\.0)?\"}[30m]))\n        or\n        vector(0)\n      )\n      +\n      sum by (cluster) (rate(apiserver_request_sli_duration_seconds_bucket{job=\"kube-apiserver\",verb=~\"LIST|GET\",subresource!~\"proxy|attach|log|exec|portforward\",scope=\"namespace\",le=~\"5(\\\\.0)?\"}[30m]))\n      +\n      sum by (cluster) (rate(apiserver_request_sli_duration_seconds_bucket{job=\"kube-apiserver\",verb=~\"LIST|GET\",subresource!~\"proxy|attach|log|exec|portforward\",scope=\"cluster\",le=~\"30(\\\\.0)?\"}[30m]))\n    )\n  )\n  +\n  # errors\n  sum by (cluster) (rate(apiserver_request_total{job=\"kube-apiserver\",verb=~\"LIST|GET\",code=~\"5..\"}[30m]))\n)\n/\nsum by (cluster) (rate(apiserver_request_total{job=\"kube-apiserver\",verb=~\"LIST|GET\"}[30m]))\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "labels": {
+                    "verb": "read"
+                },
+                "name": "apiserver_request:burnrate3d",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "(\n  (\n    # too slow\n    sum by (cluster) (rate(apiserver_request_sli_duration_seconds_count{job=\"kube-apiserver\",verb=~\"LIST|GET\",subresource!~\"proxy|attach|log|exec|portforward\"}[3d]))\n    -\n    (\n      (\n        sum by (cluster) (rate(apiserver_request_sli_duration_seconds_bucket{job=\"kube-apiserver\",verb=~\"LIST|GET\",subresource!~\"proxy|attach|log|exec|portforward\",scope=~\"resource|\",le=~\"1(\\\\.0)?\"}[3d]))\n        or\n        vector(0)\n      )\n      +\n      sum by (cluster) (rate(apiserver_request_sli_duration_seconds_bucket{job=\"kube-apiserver\",verb=~\"LIST|GET\",subresource!~\"proxy|attach|log|exec|portforward\",scope=\"namespace\",le=~\"5(\\\\.0)?\"}[3d]))\n      +\n      sum by (cluster) (rate(apiserver_request_sli_duration_seconds_bucket{job=\"kube-apiserver\",verb=~\"LIST|GET\",subresource!~\"proxy|attach|log|exec|portforward\",scope=\"cluster\",le=~\"30(\\\\.0)?\"}[3d]))\n    )\n  )\n  +\n  # errors\n  sum by (cluster) (rate(apiserver_request_total{job=\"kube-apiserver\",verb=~\"LIST|GET\",code=~\"5..\"}[3d]))\n)\n/\nsum by (cluster) (rate(apiserver_request_total{job=\"kube-apiserver\",verb=~\"LIST|GET\"}[3d]))\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "labels": {
+                    "verb": "read"
+                },
+                "name": "apiserver_request:burnrate5m",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "(\n  (\n    # too slow\n    sum by (cluster) (rate(apiserver_request_sli_duration_seconds_count{job=\"kube-apiserver\",verb=~\"LIST|GET\",subresource!~\"proxy|attach|log|exec|portforward\"}[5m]))\n    -\n    (\n      (\n        sum by (cluster) (rate(apiserver_request_sli_duration_seconds_bucket{job=\"kube-apiserver\",verb=~\"LIST|GET\",subresource!~\"proxy|attach|log|exec|portforward\",scope=~\"resource|\",le=~\"1(\\\\.0)?\"}[5m]))\n        or\n        vector(0)\n      )\n      +\n      sum by (cluster) (rate(apiserver_request_sli_duration_seconds_bucket{job=\"kube-apiserver\",verb=~\"LIST|GET\",subresource!~\"proxy|attach|log|exec|portforward\",scope=\"namespace\",le=~\"5(\\\\.0)?\"}[5m]))\n      +\n      sum by (cluster) (rate(apiserver_request_sli_duration_seconds_bucket{job=\"kube-apiserver\",verb=~\"LIST|GET\",subresource!~\"proxy|attach|log|exec|portforward\",scope=\"cluster\",le=~\"30(\\\\.0)?\"}[5m]))\n    )\n  )\n  +\n  # errors\n  sum by (cluster) (rate(apiserver_request_total{job=\"kube-apiserver\",verb=~\"LIST|GET\",code=~\"5..\"}[5m]))\n)\n/\nsum by (cluster) (rate(apiserver_request_total{job=\"kube-apiserver\",verb=~\"LIST|GET\"}[5m]))\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "labels": {
+                    "verb": "read"
+                },
+                "name": "apiserver_request:burnrate6h",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "(\n  (\n    # too slow\n    sum by (cluster) (rate(apiserver_request_sli_duration_seconds_count{job=\"kube-apiserver\",verb=~\"LIST|GET\",subresource!~\"proxy|attach|log|exec|portforward\"}[6h]))\n    -\n    (\n      (\n        sum by (cluster) (rate(apiserver_request_sli_duration_seconds_bucket{job=\"kube-apiserver\",verb=~\"LIST|GET\",subresource!~\"proxy|attach|log|exec|portforward\",scope=~\"resource|\",le=~\"1(\\\\.0)?\"}[6h]))\n        or\n        vector(0)\n      )\n      +\n      sum by (cluster) (rate(apiserver_request_sli_duration_seconds_bucket{job=\"kube-apiserver\",verb=~\"LIST|GET\",subresource!~\"proxy|attach|log|exec|portforward\",scope=\"namespace\",le=~\"5(\\\\.0)?\"}[6h]))\n      +\n      sum by (cluster) (rate(apiserver_request_sli_duration_seconds_bucket{job=\"kube-apiserver\",verb=~\"LIST|GET\",subresource!~\"proxy|attach|log|exec|portforward\",scope=\"cluster\",le=~\"30(\\\\.0)?\"}[6h]))\n    )\n  )\n  +\n  # errors\n  sum by (cluster) (rate(apiserver_request_total{job=\"kube-apiserver\",verb=~\"LIST|GET\",code=~\"5..\"}[6h]))\n)\n/\nsum by (cluster) (rate(apiserver_request_total{job=\"kube-apiserver\",verb=~\"LIST|GET\"}[6h]))\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "labels": {
+                    "verb": "write"
+                },
+                "name": "apiserver_request:burnrate1d",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "(\n  (\n    # too slow\n    sum by (cluster) (rate(apiserver_request_sli_duration_seconds_count{job=\"kube-apiserver\",verb=~\"POST|PUT|PATCH|DELETE\",subresource!~\"proxy|attach|log|exec|portforward\"}[1d]))\n    -\n    sum by (cluster) (rate(apiserver_request_sli_duration_seconds_bucket{job=\"kube-apiserver\",verb=~\"POST|PUT|PATCH|DELETE\",subresource!~\"proxy|attach|log|exec|portforward\",le=~\"1(\\\\.0)?\"}[1d]))\n  )\n  +\n  sum by (cluster) (rate(apiserver_request_total{job=\"kube-apiserver\",verb=~\"POST|PUT|PATCH|DELETE\",code=~\"5..\"}[1d]))\n)\n/\nsum by (cluster) (rate(apiserver_request_total{job=\"kube-apiserver\",verb=~\"POST|PUT|PATCH|DELETE\"}[1d]))\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "labels": {
+                    "verb": "write"
+                },
+                "name": "apiserver_request:burnrate1h",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "(\n  (\n    # too slow\n    sum by (cluster) (rate(apiserver_request_sli_duration_seconds_count{job=\"kube-apiserver\",verb=~\"POST|PUT|PATCH|DELETE\",subresource!~\"proxy|attach|log|exec|portforward\"}[1h]))\n    -\n    sum by (cluster) (rate(apiserver_request_sli_duration_seconds_bucket{job=\"kube-apiserver\",verb=~\"POST|PUT|PATCH|DELETE\",subresource!~\"proxy|attach|log|exec|portforward\",le=~\"1(\\\\.0)?\"}[1h]))\n  )\n  +\n  sum by (cluster) (rate(apiserver_request_total{job=\"kube-apiserver\",verb=~\"POST|PUT|PATCH|DELETE\",code=~\"5..\"}[1h]))\n)\n/\nsum by (cluster) (rate(apiserver_request_total{job=\"kube-apiserver\",verb=~\"POST|PUT|PATCH|DELETE\"}[1h]))\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "labels": {
+                    "verb": "write"
+                },
+                "name": "apiserver_request:burnrate2h",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "(\n  (\n    # too slow\n    sum by (cluster) (rate(apiserver_request_sli_duration_seconds_count{job=\"kube-apiserver\",verb=~\"POST|PUT|PATCH|DELETE\",subresource!~\"proxy|attach|log|exec|portforward\"}[2h]))\n    -\n    sum by (cluster) (rate(apiserver_request_sli_duration_seconds_bucket{job=\"kube-apiserver\",verb=~\"POST|PUT|PATCH|DELETE\",subresource!~\"proxy|attach|log|exec|portforward\",le=~\"1(\\\\.0)?\"}[2h]))\n  )\n  +\n  sum by (cluster) (rate(apiserver_request_total{job=\"kube-apiserver\",verb=~\"POST|PUT|PATCH|DELETE\",code=~\"5..\"}[2h]))\n)\n/\nsum by (cluster) (rate(apiserver_request_total{job=\"kube-apiserver\",verb=~\"POST|PUT|PATCH|DELETE\"}[2h]))\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "labels": {
+                    "verb": "write"
+                },
+                "name": "apiserver_request:burnrate30m",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "(\n  (\n    # too slow\n    sum by (cluster) (rate(apiserver_request_sli_duration_seconds_count{job=\"kube-apiserver\",verb=~\"POST|PUT|PATCH|DELETE\",subresource!~\"proxy|attach|log|exec|portforward\"}[30m]))\n    -\n    sum by (cluster) (rate(apiserver_request_sli_duration_seconds_bucket{job=\"kube-apiserver\",verb=~\"POST|PUT|PATCH|DELETE\",subresource!~\"proxy|attach|log|exec|portforward\",le=~\"1(\\\\.0)?\"}[30m]))\n  )\n  +\n  sum by (cluster) (rate(apiserver_request_total{job=\"kube-apiserver\",verb=~\"POST|PUT|PATCH|DELETE\",code=~\"5..\"}[30m]))\n)\n/\nsum by (cluster) (rate(apiserver_request_total{job=\"kube-apiserver\",verb=~\"POST|PUT|PATCH|DELETE\"}[30m]))\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "labels": {
+                    "verb": "write"
+                },
+                "name": "apiserver_request:burnrate3d",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "(\n  (\n    # too slow\n    sum by (cluster) (rate(apiserver_request_sli_duration_seconds_count{job=\"kube-apiserver\",verb=~\"POST|PUT|PATCH|DELETE\",subresource!~\"proxy|attach|log|exec|portforward\"}[3d]))\n    -\n    sum by (cluster) (rate(apiserver_request_sli_duration_seconds_bucket{job=\"kube-apiserver\",verb=~\"POST|PUT|PATCH|DELETE\",subresource!~\"proxy|attach|log|exec|portforward\",le=~\"1(\\\\.0)?\"}[3d]))\n  )\n  +\n  sum by (cluster) (rate(apiserver_request_total{job=\"kube-apiserver\",verb=~\"POST|PUT|PATCH|DELETE\",code=~\"5..\"}[3d]))\n)\n/\nsum by (cluster) (rate(apiserver_request_total{job=\"kube-apiserver\",verb=~\"POST|PUT|PATCH|DELETE\"}[3d]))\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "labels": {
+                    "verb": "write"
+                },
+                "name": "apiserver_request:burnrate5m",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "(\n  (\n    # too slow\n    sum by (cluster) (rate(apiserver_request_sli_duration_seconds_count{job=\"kube-apiserver\",verb=~\"POST|PUT|PATCH|DELETE\",subresource!~\"proxy|attach|log|exec|portforward\"}[5m]))\n    -\n    sum by (cluster) (rate(apiserver_request_sli_duration_seconds_bucket{job=\"kube-apiserver\",verb=~\"POST|PUT|PATCH|DELETE\",subresource!~\"proxy|attach|log|exec|portforward\",le=~\"1(\\\\.0)?\"}[5m]))\n  )\n  +\n  sum by (cluster) (rate(apiserver_request_total{job=\"kube-apiserver\",verb=~\"POST|PUT|PATCH|DELETE\",code=~\"5..\"}[5m]))\n)\n/\nsum by (cluster) (rate(apiserver_request_total{job=\"kube-apiserver\",verb=~\"POST|PUT|PATCH|DELETE\"}[5m]))\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "labels": {
+                    "verb": "write"
+                },
+                "name": "apiserver_request:burnrate6h",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "(\n  (\n    # too slow\n    sum by (cluster) (rate(apiserver_request_sli_duration_seconds_count{job=\"kube-apiserver\",verb=~\"POST|PUT|PATCH|DELETE\",subresource!~\"proxy|attach|log|exec|portforward\"}[6h]))\n    -\n    sum by (cluster) (rate(apiserver_request_sli_duration_seconds_bucket{job=\"kube-apiserver\",verb=~\"POST|PUT|PATCH|DELETE\",subresource!~\"proxy|attach|log|exec|portforward\",le=~\"1(\\\\.0)?\"}[6h]))\n  )\n  +\n  sum by (cluster) (rate(apiserver_request_total{job=\"kube-apiserver\",verb=~\"POST|PUT|PATCH|DELETE\",code=~\"5..\"}[6h]))\n)\n/\nsum by (cluster) (rate(apiserver_request_total{job=\"kube-apiserver\",verb=~\"POST|PUT|PATCH|DELETE\"}[6h]))\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            }
+        ]
+    },
+    {
+        "interval": "1m",
+        "name": "kube-apiserver-histogram.rules",
+        "rules": [
+            {
+                "labels": {
+                    "quantile": "0.99",
+                    "verb": "read"
+                },
+                "name": "cluster_quantile:apiserver_request_sli_duration_seconds:histogram_quantile",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "histogram_quantile(0.99, sum by (cluster, le, resource) (rate(apiserver_request_sli_duration_seconds_bucket{job=\"kube-apiserver\",verb=~\"LIST|GET\",subresource!~\"proxy|attach|log|exec|portforward\"}[5m]))) > 0\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "labels": {
+                    "quantile": "0.99",
+                    "verb": "write"
+                },
+                "name": "cluster_quantile:apiserver_request_sli_duration_seconds:histogram_quantile",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "histogram_quantile(0.99, sum by (cluster, le, resource) (rate(apiserver_request_sli_duration_seconds_bucket{job=\"kube-apiserver\",verb=~\"POST|PUT|PATCH|DELETE\",subresource!~\"proxy|attach|log|exec|portforward\"}[5m]))) > 0\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            }
+        ]
+    },
+    {
+        "interval": "1m",
+        "name": "k8s.rules.container_cpu_usage_seconds_total",
+        "rules": [
+            {
+                "name": "node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate5m",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "sum by (cluster, namespace, pod, container) (\n  rate(container_cpu_usage_seconds_total{job=\"cadvisor\", image!=\"\"}[5m])\n) * on (cluster, namespace, pod) group_left(node) topk by (cluster, namespace, pod) (\n  1, max by(cluster, namespace, pod, node) (kube_pod_info{node!=\"\"})\n)\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": "node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "sum by (cluster, namespace, pod, container) (\n  irate(container_cpu_usage_seconds_total{job=\"cadvisor\", image!=\"\"}[5m])\n) * on (cluster, namespace, pod) group_left(node) topk by (cluster, namespace, pod) (\n  1, max by(cluster, namespace, pod, node) (kube_pod_info{node!=\"\"})\n)\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            }
+        ]
+    },
+    {
+        "interval": "1m",
+        "name": "k8s.rules.container_memory_working_set_bytes",
+        "rules": [
+            {
+                "name": "node_namespace_pod_container:container_memory_working_set_bytes",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "container_memory_working_set_bytes{job=\"cadvisor\", image!=\"\"}\n* on (cluster, namespace, pod) group_left(node) topk by(cluster, namespace, pod) (1,\n  max by(cluster, namespace, pod, node) (kube_pod_info{node!=\"\"})\n)\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            }
+        ]
+    },
+    {
+        "interval": "1m",
+        "name": "k8s.rules.container_memory_rss",
+        "rules": [
+            {
+                "name": "node_namespace_pod_container:container_memory_rss",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "container_memory_rss{job=\"cadvisor\", image!=\"\"}\n* on (cluster, namespace, pod) group_left(node) topk by(cluster, namespace, pod) (1,\n  max by(cluster, namespace, pod, node) (kube_pod_info{node!=\"\"})\n)\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            }
+        ]
+    },
+    {
+        "interval": "1m",
+        "name": "k8s.rules.container_memory_cache",
+        "rules": [
+            {
+                "name": "node_namespace_pod_container:container_memory_cache",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "container_memory_cache{job=\"cadvisor\", image!=\"\"}\n* on (cluster, namespace, pod) group_left(node) topk by(cluster, namespace, pod) (1,\n  max by(cluster, namespace, pod, node) (kube_pod_info{node!=\"\"})\n)\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            }
+        ]
+    },
+    {
+        "interval": "1m",
+        "name": "k8s.rules.container_memory_swap",
+        "rules": [
+            {
+                "name": "node_namespace_pod_container:container_memory_swap",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "container_memory_swap{job=\"cadvisor\", image!=\"\"}\n* on (cluster, namespace, pod) group_left(node) topk by(cluster, namespace, pod) (1,\n  max by(cluster, namespace, pod, node) (kube_pod_info{node!=\"\"})\n)\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            }
+        ]
+    },
+    {
+        "interval": "1m",
+        "name": "k8s.rules.container_memory_requests",
+        "rules": [
+            {
+                "name": "cluster:namespace:pod_memory:active:kube_pod_container_resource_requests",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "kube_pod_container_resource_requests{resource=\"memory\",job=\"kube-state-metrics\"}  * on (namespace, pod, cluster)\ngroup_left() max by (namespace, pod, cluster) (\n  (kube_pod_status_phase{phase=~\"Pending|Running\"} == 1)\n)\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": "namespace_memory:kube_pod_container_resource_requests:sum",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "sum by (namespace, cluster) (\n    sum by (namespace, pod, cluster) (\n        max by (namespace, pod, container, cluster) (\n          kube_pod_container_resource_requests{resource=\"memory\",job=\"kube-state-metrics\"}\n        ) * on(namespace, pod, cluster) group_left() max by (namespace, pod, cluster) (\n          kube_pod_status_phase{phase=~\"Pending|Running\"} == 1\n        )\n    )\n)\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            }
+        ]
+    },
+    {
+        "interval": "1m",
+        "name": "k8s.rules.container_cpu_requests",
+        "rules": [
+            {
+                "name": "cluster:namespace:pod_cpu:active:kube_pod_container_resource_requests",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "kube_pod_container_resource_requests{resource=\"cpu\",job=\"kube-state-metrics\"}  * on (namespace, pod, cluster)\ngroup_left() max by (namespace, pod, cluster) (\n  (kube_pod_status_phase{phase=~\"Pending|Running\"} == 1)\n)\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": "namespace_cpu:kube_pod_container_resource_requests:sum",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "sum by (namespace, cluster) (\n    sum by (namespace, pod, cluster) (\n        max by (namespace, pod, container, cluster) (\n          kube_pod_container_resource_requests{resource=\"cpu\",job=\"kube-state-metrics\"}\n        ) * on(namespace, pod, cluster) group_left() max by (namespace, pod, cluster) (\n          kube_pod_status_phase{phase=~\"Pending|Running\"} == 1\n        )\n    )\n)\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            }
+        ]
+    },
+    {
+        "interval": "1m",
+        "name": "k8s.rules.container_memory_limits",
+        "rules": [
+            {
+                "name": "cluster:namespace:pod_memory:active:kube_pod_container_resource_limits",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "kube_pod_container_resource_limits{resource=\"memory\",job=\"kube-state-metrics\"}  * on (namespace, pod, cluster)\ngroup_left() max by (namespace, pod, cluster) (\n  (kube_pod_status_phase{phase=~\"Pending|Running\"} == 1)\n)\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": "namespace_memory:kube_pod_container_resource_limits:sum",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "sum by (namespace, cluster) (\n    sum by (namespace, pod, cluster) (\n        max by (namespace, pod, container, cluster) (\n          kube_pod_container_resource_limits{resource=\"memory\",job=\"kube-state-metrics\"}\n        ) * on(namespace, pod, cluster) group_left() max by (namespace, pod, cluster) (\n          kube_pod_status_phase{phase=~\"Pending|Running\"} == 1\n        )\n    )\n)\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            }
+        ]
+    },
+    {
+        "interval": "1m",
+        "name": "k8s.rules.container_cpu_limits",
+        "rules": [
+            {
+                "name": "cluster:namespace:pod_cpu:active:kube_pod_container_resource_limits",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "kube_pod_container_resource_limits{resource=\"cpu\",job=\"kube-state-metrics\"}  * on (namespace, pod, cluster)\ngroup_left() max by (namespace, pod, cluster) (\n (kube_pod_status_phase{phase=~\"Pending|Running\"} == 1)\n )\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": "namespace_cpu:kube_pod_container_resource_limits:sum",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "sum by (namespace, cluster) (\n    sum by (namespace, pod, cluster) (\n        max by (namespace, pod, container, cluster) (\n          kube_pod_container_resource_limits{resource=\"cpu\",job=\"kube-state-metrics\"}\n        ) * on(namespace, pod, cluster) group_left() max by (namespace, pod, cluster) (\n          kube_pod_status_phase{phase=~\"Pending|Running\"} == 1\n        )\n    )\n)\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            }
+        ]
+    },
+    {
+        "interval": "1m",
+        "name": "k8s.rules.pod_owner",
+        "rules": [
+            {
+                "labels": {
+                    "workload_type": "deployment"
+                },
+                "name": "namespace_workload_pod:kube_pod_owner:relabel",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "max by (cluster, namespace, workload, pod) (\n  label_replace(\n    label_replace(\n      kube_pod_owner{job=\"kube-state-metrics\", owner_kind=\"ReplicaSet\"},\n      \"replicaset\", \"$1\", \"owner_name\", \"(.*)\"\n    ) * on(replicaset, namespace) group_left(owner_name) topk by(replicaset, namespace) (\n      1, max by (replicaset, namespace, owner_name) (\n        kube_replicaset_owner{job=\"kube-state-metrics\"}\n      )\n    ),\n    \"workload\", \"$1\", \"owner_name\", \"(.*)\"\n  )\n)\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "labels": {
+                    "workload_type": "daemonset"
+                },
+                "name": "namespace_workload_pod:kube_pod_owner:relabel",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "max by (cluster, namespace, workload, pod) (\n  label_replace(\n    kube_pod_owner{job=\"kube-state-metrics\", owner_kind=\"DaemonSet\"},\n    \"workload\", \"$1\", \"owner_name\", \"(.*)\"\n  )\n)\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "labels": {
+                    "workload_type": "statefulset"
+                },
+                "name": "namespace_workload_pod:kube_pod_owner:relabel",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "max by (cluster, namespace, workload, pod) (\n  label_replace(\n    kube_pod_owner{job=\"kube-state-metrics\", owner_kind=\"StatefulSet\"},\n    \"workload\", \"$1\", \"owner_name\", \"(.*)\"\n  )\n)\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "labels": {
+                    "workload_type": "job"
+                },
+                "name": "namespace_workload_pod:kube_pod_owner:relabel",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "max by (cluster, namespace, workload, pod) (\n  label_replace(\n    kube_pod_owner{job=\"kube-state-metrics\", owner_kind=\"Job\"},\n    \"workload\", \"$1\", \"owner_name\", \"(.*)\"\n  )\n)\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            }
+        ]
+    },
+    {
+        "interval": "1m",
+        "name": "kube-scheduler.rules",
+        "rules": [
+            {
+                "labels": {
+                    "quantile": "0.99"
+                },
+                "name": "cluster_quantile:scheduler_e2e_scheduling_duration_seconds:histogram_quantile",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "histogram_quantile(0.99, sum(rate(scheduler_e2e_scheduling_duration_seconds_bucket{job=\"kube-scheduler\"}[5m])) without(instance, pod))\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "labels": {
+                    "quantile": "0.99"
+                },
+                "name": "cluster_quantile:scheduler_scheduling_algorithm_duration_seconds:histogram_quantile",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "histogram_quantile(0.99, sum(rate(scheduler_scheduling_algorithm_duration_seconds_bucket{job=\"kube-scheduler\"}[5m])) without(instance, pod))\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "labels": {
+                    "quantile": "0.99"
+                },
+                "name": "cluster_quantile:scheduler_binding_duration_seconds:histogram_quantile",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "histogram_quantile(0.99, sum(rate(scheduler_binding_duration_seconds_bucket{job=\"kube-scheduler\"}[5m])) without(instance, pod))\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "labels": {
+                    "quantile": "0.9"
+                },
+                "name": "cluster_quantile:scheduler_e2e_scheduling_duration_seconds:histogram_quantile",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "histogram_quantile(0.9, sum(rate(scheduler_e2e_scheduling_duration_seconds_bucket{job=\"kube-scheduler\"}[5m])) without(instance, pod))\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "labels": {
+                    "quantile": "0.9"
+                },
+                "name": "cluster_quantile:scheduler_scheduling_algorithm_duration_seconds:histogram_quantile",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "histogram_quantile(0.9, sum(rate(scheduler_scheduling_algorithm_duration_seconds_bucket{job=\"kube-scheduler\"}[5m])) without(instance, pod))\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "labels": {
+                    "quantile": "0.9"
+                },
+                "name": "cluster_quantile:scheduler_binding_duration_seconds:histogram_quantile",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "histogram_quantile(0.9, sum(rate(scheduler_binding_duration_seconds_bucket{job=\"kube-scheduler\"}[5m])) without(instance, pod))\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "labels": {
+                    "quantile": "0.5"
+                },
+                "name": "cluster_quantile:scheduler_e2e_scheduling_duration_seconds:histogram_quantile",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "histogram_quantile(0.5, sum(rate(scheduler_e2e_scheduling_duration_seconds_bucket{job=\"kube-scheduler\"}[5m])) without(instance, pod))\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "labels": {
+                    "quantile": "0.5"
+                },
+                "name": "cluster_quantile:scheduler_scheduling_algorithm_duration_seconds:histogram_quantile",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "histogram_quantile(0.5, sum(rate(scheduler_scheduling_algorithm_duration_seconds_bucket{job=\"kube-scheduler\"}[5m])) without(instance, pod))\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "labels": {
+                    "quantile": "0.5"
+                },
+                "name": "cluster_quantile:scheduler_binding_duration_seconds:histogram_quantile",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "histogram_quantile(0.5, sum(rate(scheduler_binding_duration_seconds_bucket{job=\"kube-scheduler\"}[5m])) without(instance, pod))\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            }
+        ]
+    },
+    {
+        "interval": "1m",
+        "name": "node.rules",
+        "rules": [
+            {
+                "name": "node_namespace_pod:kube_pod_info:",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "topk by(cluster, namespace, pod) (1,\n  max by (cluster, node, namespace, pod) (\n    label_replace(kube_pod_info{job=\"kube-state-metrics\",node!=\"\"}, \"pod\", \"$1\", \"pod\", \"(.*)\")\n))\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": "node:node_num_cpu:sum",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "count by (cluster, node) (\n  node_cpu_seconds_total{mode=\"idle\",job=\"node-exporter\"}\n  * on (cluster, namespace, pod) group_left(node)\n  topk by(cluster, namespace, pod) (1, node_namespace_pod:kube_pod_info:)\n)\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": ":node_memory_MemAvailable_bytes:sum",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "sum(\n  node_memory_MemAvailable_bytes{job=\"node-exporter\"} or\n  (\n    node_memory_Buffers_bytes{job=\"node-exporter\"} +\n    node_memory_Cached_bytes{job=\"node-exporter\"} +\n    node_memory_MemFree_bytes{job=\"node-exporter\"} +\n    node_memory_Slab_bytes{job=\"node-exporter\"}\n  )\n) by (cluster)\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": "node:node_cpu_utilization:ratio_rate5m",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "avg by (cluster, node) (\n  sum without (mode) (\n    rate(node_cpu_seconds_total{mode!=\"idle\",mode!=\"iowait\",mode!=\"steal\",job=\"node-exporter\"}[5m])\n  )\n)\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": "cluster:node_cpu:ratio_rate5m",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "avg by (cluster) (\n  node:node_cpu_utilization:ratio_rate5m\n)\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            }
+        ]
+    },
+    {
+        "interval": "1m",
+        "name": "kubelet.rules",
+        "rules": [
+            {
+                "labels": {
+                    "quantile": "0.99"
+                },
+                "name": "node_quantile:kubelet_pleg_relist_duration_seconds:histogram_quantile",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "histogram_quantile(0.99, sum(rate(kubelet_pleg_relist_duration_seconds_bucket{job=\"kubelet\"}[5m])) by (cluster, instance, le) * on(cluster, instance) group_left(node) kubelet_node_name{job=\"kubelet\"})\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "labels": {
+                    "quantile": "0.9"
+                },
+                "name": "node_quantile:kubelet_pleg_relist_duration_seconds:histogram_quantile",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "histogram_quantile(0.9, sum(rate(kubelet_pleg_relist_duration_seconds_bucket{job=\"kubelet\"}[5m])) by (cluster, instance, le) * on(cluster, instance) group_left(node) kubelet_node_name{job=\"kubelet\"})\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "labels": {
+                    "quantile": "0.5"
+                },
+                "name": "node_quantile:kubelet_pleg_relist_duration_seconds:histogram_quantile",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "histogram_quantile(0.5, sum(rate(kubelet_pleg_relist_duration_seconds_bucket{job=\"kubelet\"}[5m])) by (cluster, instance, le) * on(cluster, instance) group_left(node) kubelet_node_name{job=\"kubelet\"})\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            }
+        ]
+    },
+    {
+        "interval": "1m",
+        "name": "windows.node.rules",
+        "rules": [
+            {
+                "name": "node:windows_node:sum",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "count by (cluster) (\n  windows_system_system_up_time{job=\"kubernetes-windows-exporter\"}\n)\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": "node:windows_node_num_cpu:sum",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "count by (cluster, instance) (sum by (cluster, instance, core) (\n  windows_cpu_time_total{job=\"kubernetes-windows-exporter\"}\n))\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": ":windows_node_cpu_utilisation:avg1m",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "1 - avg by (cluster) (rate(windows_cpu_time_total{job=\"kubernetes-windows-exporter\",mode=\"idle\"}[1m]))\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": "node:windows_node_cpu_utilisation:avg1m",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "1 - avg by (cluster, instance) (\n  rate(windows_cpu_time_total{job=\"kubernetes-windows-exporter\",mode=\"idle\"}[1m])\n)\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": ":windows_node_memory_utilisation:",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "1 -\nsum by (cluster) (windows_memory_available_bytes{job=\"kubernetes-windows-exporter\"})\n/\nsum by (cluster) (windows_os_visible_memory_bytes{job=\"kubernetes-windows-exporter\"})\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": ":windows_node_memory_MemFreeCached_bytes:sum",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "sum by (cluster) (windows_memory_available_bytes{job=\"kubernetes-windows-exporter\"} + windows_memory_cache_bytes{job=\"kubernetes-windows-exporter\"})\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": "node:windows_node_memory_totalCached_bytes:sum",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "(windows_memory_cache_bytes{job=\"kubernetes-windows-exporter\"} + windows_memory_modified_page_list_bytes{job=\"kubernetes-windows-exporter\"} + windows_memory_standby_cache_core_bytes{job=\"kubernetes-windows-exporter\"} + windows_memory_standby_cache_normal_priority_bytes{job=\"kubernetes-windows-exporter\"} + windows_memory_standby_cache_reserve_bytes{job=\"kubernetes-windows-exporter\"})\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": ":windows_node_memory_MemTotal_bytes:sum",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "sum by (cluster) (windows_os_visible_memory_bytes{job=\"kubernetes-windows-exporter\"})\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": "node:windows_node_memory_bytes_available:sum",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "sum by (cluster, instance) (\n  (windows_memory_available_bytes{job=\"kubernetes-windows-exporter\"})\n)\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": "node:windows_node_memory_bytes_total:sum",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "sum by (cluster, instance) (\n  windows_os_visible_memory_bytes{job=\"kubernetes-windows-exporter\"}\n)\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": "node:windows_node_memory_utilisation:ratio",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "(node:windows_node_memory_bytes_total:sum - node:windows_node_memory_bytes_available:sum)\n/\nscalar(sum(node:windows_node_memory_bytes_total:sum))\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": "node:windows_node_memory_utilisation:",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "1 - (node:windows_node_memory_bytes_available:sum / node:windows_node_memory_bytes_total:sum)\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": "node:windows_node_memory_swap_io_pages:irate",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "irate(windows_memory_swap_page_operations_total{job=\"kubernetes-windows-exporter\"}[5m])\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": ":windows_node_disk_utilisation:avg_irate",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "avg by (cluster) (irate(windows_logical_disk_read_seconds_total{job=\"kubernetes-windows-exporter\"}[1m]) +\n    irate(windows_logical_disk_write_seconds_total{job=\"kubernetes-windows-exporter\"}[1m])\n  )\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": "node:windows_node_disk_utilisation:avg_irate",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "avg by (cluster, instance) (\n  (irate(windows_logical_disk_read_seconds_total{job=\"kubernetes-windows-exporter\"}[1m]) +\n   irate(windows_logical_disk_write_seconds_total{job=\"kubernetes-windows-exporter\"}[1m]))\n)\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": "node:windows_node_filesystem_usage:",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "max by (cluster,instance,volume)(\n  (windows_logical_disk_size_bytes{job=\"kubernetes-windows-exporter\"}\n- windows_logical_disk_free_bytes{job=\"kubernetes-windows-exporter\"})\n/ windows_logical_disk_size_bytes{job=\"kubernetes-windows-exporter\"}\n)\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": "node:windows_node_filesystem_avail:",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "max by (cluster, instance, volume) (windows_logical_disk_free_bytes{job=\"kubernetes-windows-exporter\"} / windows_logical_disk_size_bytes{job=\"kubernetes-windows-exporter\"})\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": ":windows_node_net_utilisation:sum_irate",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "sum by (cluster) (irate(windows_net_bytes_total{job=\"kubernetes-windows-exporter\"}[1m]))\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": "node:windows_node_net_utilisation:sum_irate",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "sum by (cluster, instance) (\n  (irate(windows_net_bytes_total{job=\"kubernetes-windows-exporter\"}[1m]))\n)\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": ":windows_node_net_saturation:sum_irate",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "sum by (cluster) (irate(windows_net_packets_received_discarded_total{job=\"kubernetes-windows-exporter\"}[1m])) +\nsum by (cluster) (irate(windows_net_packets_outbound_discarded_total{job=\"kubernetes-windows-exporter\"}[1m]))\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": "node:windows_node_net_saturation:sum_irate",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "sum by (cluster, instance) (\n  (irate(windows_net_packets_received_discarded_total{job=\"kubernetes-windows-exporter\"}[1m]) +\n  irate(windows_net_packets_outbound_discarded_total{job=\"kubernetes-windows-exporter\"}[1m]))\n)\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            }
+        ]
+    },
+    {
+        "interval": "1m",
+        "name": "windows.pod.rules",
+        "rules": [
+            {
+                "name": "windows_pod_container_available",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "windows_container_available{job=\"kubernetes-windows-exporter\", container_id != \"\"} * on(container_id, cluster) group_left(container, pod, namespace) max(kube_pod_container_info{job=\"kube-state-metrics\", container_id != \"\"}) by(container, container_id, pod, namespace, cluster)\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": "windows_container_total_runtime",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "windows_container_cpu_usage_seconds_total{job=\"kubernetes-windows-exporter\", container_id != \"\"} * on(container_id, cluster) group_left(container, pod, namespace) max(kube_pod_container_info{job=\"kube-state-metrics\", container_id != \"\"}) by(container, container_id, pod, namespace, cluster)\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": "windows_container_memory_usage",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "windows_container_memory_usage_commit_bytes{job=\"kubernetes-windows-exporter\", container_id != \"\"} * on(container_id, cluster) group_left(container, pod, namespace) max(kube_pod_container_info{job=\"kube-state-metrics\", container_id != \"\"}) by(container, container_id, pod, namespace, cluster)\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": "windows_container_private_working_set_usage",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "windows_container_memory_usage_private_working_set_bytes{job=\"kubernetes-windows-exporter\", container_id != \"\"} * on(container_id, cluster) group_left(container, pod, namespace) max(kube_pod_container_info{job=\"kube-state-metrics\", container_id != \"\"}) by(container, container_id, pod, namespace, cluster)\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": "windows_container_network_received_bytes_total",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "windows_container_network_receive_bytes_total{job=\"kubernetes-windows-exporter\", container_id != \"\"} * on(container_id, cluster) group_left(container, pod, namespace) max(kube_pod_container_info{job=\"kube-state-metrics\", container_id != \"\"}) by(container, container_id, pod, namespace, cluster)\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": "windows_container_network_transmitted_bytes_total",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "windows_container_network_transmit_bytes_total{job=\"kubernetes-windows-exporter\", container_id != \"\"} * on(container_id, cluster) group_left(container, pod, namespace) max(kube_pod_container_info{job=\"kube-state-metrics\", container_id != \"\"}) by(container, container_id, pod, namespace, cluster)\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": "kube_pod_windows_container_resource_memory_request",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "max by (cluster, namespace, pod, container) (\n  kube_pod_container_resource_requests{resource=\"memory\",job=\"kube-state-metrics\"}\n) * on(container,pod,namespace,cluster) (windows_pod_container_available)\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": "kube_pod_windows_container_resource_memory_limit",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "kube_pod_container_resource_limits{resource=\"memory\",job=\"kube-state-metrics\"} * on(container,pod,namespace,cluster) (windows_pod_container_available)\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": "kube_pod_windows_container_resource_cpu_cores_request",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "max by (cluster, namespace, pod, container) (\n  kube_pod_container_resource_requests{resource=\"cpu\",job=\"kube-state-metrics\"}\n) * on(container,pod,namespace,cluster) (windows_pod_container_available)\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": "kube_pod_windows_container_resource_cpu_cores_limit",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "kube_pod_container_resource_limits{resource=\"cpu\",job=\"kube-state-metrics\"} * on(container,pod,namespace,cluster) (windows_pod_container_available)\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            },
+            {
+                "name": "namespace_pod_container:windows_container_cpu_usage_seconds_total:sum_rate",
+                "query": {
+                    "datasourceUid": "P09C4D52DEC9B98E6",
+                    "expr": "sum by (cluster, namespace, pod, container) (\n  rate(windows_container_total_runtime{}[5m])\n)\n",
+                    "intervalMs": 60000,
+                    "maxDataPoints": 43200
+                }
+            }
+        ]
+    }
+]
