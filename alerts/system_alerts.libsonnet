@@ -14,7 +14,7 @@ local utils = import '../lib/utils.libsonnet';
           {
             alert: 'KubeVersionMismatch',
             expr: |||
-              count by (%(clusterLabel)s) (count by (git_version, %(clusterLabel)s) (label_replace(kubernetes_build_info{%(notKubeDnsCoreDnsSelector)s},"git_version","$1","git_version","(v[0-9]*.[0-9]*).*"))) > 1
+              count by (cluster) (count by (git_version, cluster) (label_replace(kubernetes_build_info{%(notKubeDnsCoreDnsSelector)s},"git_version","$1","git_version","(v[0-9]*.[0-9]*).*"))) > 1
             ||| % $._config,
             'for': '15m',
             labels: {
@@ -33,9 +33,9 @@ local utils = import '../lib/utils.libsonnet';
             // this is normal and an expected error, therefore it should be
             // ignored in this alert.
             expr: |||
-              (sum(rate(rest_client_requests_total{%(kubeApiserverSelector)s,code=~"5.."}[5m])) by (%(clusterLabel)s, instance, job, namespace)
+              (sum(rate(rest_client_requests_total{%(kubeApiserverSelector)s,code=~"5.."}[5m])) by (cluster, instance, job, namespace)
                 /
-              sum(rate(rest_client_requests_total{%(kubeApiserverSelector)s}[5m])) by (%(clusterLabel)s, instance, job, namespace))
+              sum(rate(rest_client_requests_total{%(kubeApiserverSelector)s}[5m])) by (cluster, instance, job, namespace))
               > 0.01
             ||| % $._config,
             'for': '15m',
@@ -52,5 +52,14 @@ local utils = import '../lib/utils.libsonnet';
         ],
       },
     ],
+  },
+
+  _grafanaAlertsContribution:: {
+    [group.name]: [
+      utils.makeGrafanaAlertBoilerplate(rule, $._config)
+      for rule in group.rules
+      if std.objectHas(rule, 'alert')
+    ]
+    for group in $.prometheusAlerts.groups
   },
 }

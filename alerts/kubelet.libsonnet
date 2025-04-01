@@ -2,8 +2,11 @@ local utils = import '../lib/utils.libsonnet';
 
 {
   _config+:: {
-    kubeStateMetricsSelector: error 'must provide selector for kube-state-metrics',
-    kubeletSelector: error 'must provide selector for kubelet',
+    kubeStateMetricsSelector: 'job="kube-state-metrics"',
+    kubeletSelector: 'job="kubelet"',
+    clusterLabel: 'cluster',
+    showMultiCluster: false,
+    namespaceLabel: 'namespace',
     kubeNodeUnreachableIgnoreKeys: [
       'ToBeDeletedByClusterAutoscaler',
       'cloud.google.com/impending-node-termination',
@@ -273,6 +276,30 @@ local utils = import '../lib/utils.libsonnet';
             componentName:: 'Kubelet',
             selector:: $._config.kubeletSelector,
           },
+        ],
+      },
+    ],
+  },
+
+  // Add Grafana alerts contribution
+  _grafanaAlertsContribution+:: {
+    local kubeletPrometheusRules = $.prometheusAlerts.groups[0].rules,
+    
+    groups+: [
+      {
+        name: 'kubernetes-system-kubelet',
+        rules: [
+          // Transform each alert rule directly
+          utils.makeGrafanaAlertBoilerplate({
+            alert: rule.alert,
+            expr: rule.expr,
+            'for': std.get(rule, 'for', '5m'),
+            labels: { [k]: rule.labels[k] for k in std.objectFields(std.get(rule, 'labels', {})) },
+            annotations: { [k]: rule.annotations[k] for k in std.objectFields(std.get(rule, 'annotations', {})) },
+          }, $._config)
+
+          for rule in kubeletPrometheusRules
+          if std.objectHas(rule, 'alert')
         ],
       },
     ],

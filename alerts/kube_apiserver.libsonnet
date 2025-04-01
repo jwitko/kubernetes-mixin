@@ -2,10 +2,27 @@ local utils = import '../lib/utils.libsonnet';
 
 {
   _config+:: {
-    kubeApiserverSelector: error 'must provide selector for kube-apiserver',
+    kubeApiserverSelector: 'job="kube-apiserver"',
+    
+    clusterLabel: 'cluster',
+    showMultiCluster: false,
+    namespaceLabel: 'namespace',
 
     certExpirationWarningSeconds: 7 * 24 * 3600,
     certExpirationCriticalSeconds: 1 * 24 * 3600,
+
+    SLOs: {
+      apiserver: {
+        days: 30,
+        target: 0.99,
+        windows: [
+          { severity: 'critical', 'for': '2m', long: '1h', short: '5m', factor: 14.4 },
+          { severity: 'critical', 'for': '15m', long: '6h', short: '30m', factor: 6 },
+          { severity: 'warning', 'for': '1h', long: '1d', short: '2h', factor: 3 },
+          { severity: 'warning', 'for': '3h', long: '3d', short: '6h', factor: 1 },
+        ],
+      },
+    },
   },
 
   prometheusAlerts+:: {
@@ -139,6 +156,28 @@ local utils = import '../lib/utils.libsonnet';
             },
             'for': '5m',
           },
+        ],
+      },
+    ],
+  },
+
+  _grafanaAlertsContribution+:: {
+    local apiserverPrometheusRules = $.prometheusAlerts.groups[1].rules,
+    
+    groups+: [
+      {
+        name: 'kubernetes-system-apiserver',
+        rules: [
+          utils.makeGrafanaAlertBoilerplate({
+            alert: rule.alert,
+            expr: rule.expr,
+            'for': std.get(rule, 'for', '5m'),
+            labels: { [k]: rule.labels[k] for k in std.objectFields(std.get(rule, 'labels', {})) },
+            annotations: { [k]: rule.annotations[k] for k in std.objectFields(std.get(rule, 'annotations', {})) },
+          }, $._config)
+
+          for rule in apiserverPrometheusRules
+          if std.objectHas(rule, 'alert')
         ],
       },
     ],

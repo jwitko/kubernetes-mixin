@@ -1,6 +1,8 @@
+local utils = import '../lib/utils.libsonnet';
+
 {
   _config+:: {
-    kubeProxySelector: error 'must provide selector for kube-proxy',
+    kubeProxySelector: 'job="kube-proxy"',
   },
 
   prometheusAlerts+:: {
@@ -15,5 +17,14 @@
         ],
       },
     ],
+  },
+
+  _grafanaAlertsContribution:: {
+    [group.name]: [
+      utils.makeGrafanaAlertBoilerplate(rule, $._config)
+      for rule in group.rules
+      if std.objectHas(rule, 'alert')
+    ]
+    for group in $.prometheusAlerts.groups
   },
 }

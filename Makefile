@@ -20,7 +20,7 @@ OUT_DIR ?=dashboards_out
 all: fmt generate lint test
 
 .PHONY: generate
-generate: prometheus_alerts.yaml prometheus_rules.yaml $(OUT_DIR)
+generate: prometheus_alerts.yaml prometheus_rules.yaml $(OUT_DIR) grafana_alerts.json
 
 $(JSONNET_VENDOR): $(JB_BIN) jsonnetfile.json
 	$(JB_BIN) install
@@ -42,6 +42,10 @@ prometheus_alerts.yaml: $(JSONNET_BIN) mixin.libsonnet lib/alerts.jsonnet alerts
 
 prometheus_rules.yaml: $(JSONNET_BIN) mixin.libsonnet lib/rules.jsonnet rules/*.libsonnet
 	@$(JSONNET_BIN) -J vendor -S lib/rules.jsonnet > $@
+
+# Target for generating Grafana alerts JSON
+grafana_alerts.json: $(JSONNET_BIN) mixin.libsonnet lib/grafana_alerts.jsonnet alerts/*.libsonnet
+	@$(JSONNET_BIN) -J vendor -S lib/grafana_alerts.jsonnet > $@
 
 $(OUT_DIR): $(JSONNET_BIN) $(JSONNET_VENDOR) mixin.libsonnet lib/dashboards.jsonnet $(SRC_DIR)/*.libsonnet
 	@mkdir -p $(OUT_DIR)

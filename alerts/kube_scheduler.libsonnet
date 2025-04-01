@@ -1,3 +1,5 @@
+local utils = import '../lib/utils.libsonnet';
+
 {
   _config+:: {
     kubeSchedulerSelector: 'job="kube-scheduler"',
@@ -15,5 +17,14 @@
         ],
       },
     ],
+  },
+
+  _grafanaAlertsContribution:: {
+    [group.name]: [
+      utils.makeGrafanaAlertBoilerplate(rule, $._config)
+      for rule in group.rules
+      if std.objectHas(rule, 'alert')
+    ]
+    for group in $.prometheusAlerts.groups
   },
 }
