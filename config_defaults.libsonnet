@@ -4,11 +4,12 @@
     clusterLabel: 'cluster',
     
     // Default selectors
+    cadvisorSelector: 'job="kubelet"',
     kubeletSelector: 'job="kubelet"',
     kubeStateMetricsSelector: 'job="kube-state-metrics"',
     kubeControllerManagerSelector: 'job="kube-controller-manager"',
     kubeSchedulerSelector: 'job="kube-scheduler"',
-    kubeApiserverSelector: 'job="kube-apiserver"',
+    kubeApiserverSelector: 'job="apiserver"',
     kubeProxySelector: 'job="kube-proxy"',
     namespaceLabel: 'namespace',
     prefixedNamespaceSelector: 'namespace!=""',

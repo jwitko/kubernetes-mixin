@@ -6,7 +6,8 @@
          "includeVars": true,
          "keepTime": true,
          "tags": [
-            "kubernetes-mixin"
+            "ZKube",
+            "generated"
          ],
          "targetBlank": false,
          "title": "Kubernetes",
@@ -46,7 +47,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sort_desc(sum(rate(container_network_receive_bytes_total{job=\"cadvisor\", cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n* on (namespace,pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=~\"$namespace\", workload=~\"$workload\", workload_type=~\"$type\"}) by (pod))\n",
+               "expr": "sort_desc(sum(rate(container_network_receive_bytes_total{job=\"kubelet\", cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n* on (namespace,pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=~\"$namespace\", workload=~\"$workload\", workload_type=~\"$type\"}) by (pod))\n",
                "legendFormat": "__auto"
             }
          ],
@@ -85,7 +86,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sort_desc(sum(rate(container_network_transmit_bytes_total{job=\"cadvisor\", cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n* on (namespace,pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=~\"$namespace\", workload=~\"$workload\", workload_type=~\"$type\"}) by (pod))\n",
+               "expr": "sort_desc(sum(rate(container_network_transmit_bytes_total{job=\"kubelet\", cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n* on (namespace,pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=~\"$namespace\", workload=~\"$workload\", workload_type=~\"$type\"}) by (pod))\n",
                "legendFormat": "__auto"
             }
          ],
@@ -124,7 +125,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sort_desc(avg(rate(container_network_receive_bytes_total{job=\"cadvisor\", cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n* on (namespace,pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=~\"$namespace\", workload=~\"$workload\", workload_type=~\"$type\"}) by (pod))\n",
+               "expr": "sort_desc(avg(rate(container_network_receive_bytes_total{job=\"kubelet\", cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n* on (namespace,pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=~\"$namespace\", workload=~\"$workload\", workload_type=~\"$type\"}) by (pod))\n",
                "legendFormat": "__auto"
             }
          ],
@@ -163,7 +164,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sort_desc(avg(rate(container_network_transmit_bytes_total{job=\"cadvisor\", cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n* on (namespace,pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=~\"$namespace\", workload=~\"$workload\", workload_type=~\"$type\"}) by (pod))\n",
+               "expr": "sort_desc(avg(rate(container_network_transmit_bytes_total{job=\"kubelet\", cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n* on (namespace,pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=~\"$namespace\", workload=~\"$workload\", workload_type=~\"$type\"}) by (pod))\n",
                "legendFormat": "__auto"
             }
          ],
@@ -214,7 +215,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sort_desc(sum(rate(container_network_receive_bytes_total{job=\"cadvisor\", cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n* on (namespace,pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=~\"$namespace\", workload=~\"$workload\", workload_type=~\"$type\"}) by (pod))\n",
+               "expr": "sort_desc(sum(rate(container_network_receive_bytes_total{job=\"kubelet\", cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n* on (namespace,pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=~\"$namespace\", workload=~\"$workload\", workload_type=~\"$type\"}) by (pod))\n",
                "legendFormat": "__auto"
             }
          ],
@@ -265,7 +266,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sort_desc(sum(rate(container_network_transmit_bytes_total{job=\"cadvisor\", cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n* on (namespace,pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=~\"$namespace\", workload=~\"$workload\", workload_type=~\"$type\"}) by (pod))\n",
+               "expr": "sort_desc(sum(rate(container_network_transmit_bytes_total{job=\"kubelet\", cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n* on (namespace,pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=~\"$namespace\", workload=~\"$workload\", workload_type=~\"$type\"}) by (pod))\n",
                "legendFormat": "__auto"
             }
          ],
@@ -316,7 +317,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sort_desc(sum(rate(container_network_receive_packets_total{job=\"cadvisor\", cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n* on (namespace,pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=~\"$namespace\", workload=~\"$workload\", workload_type=~\"$type\"}) by (pod))\n",
+               "expr": "sort_desc(sum(rate(container_network_receive_packets_total{job=\"kubelet\", cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n* on (namespace,pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=~\"$namespace\", workload=~\"$workload\", workload_type=~\"$type\"}) by (pod))\n",
                "legendFormat": "__auto"
             }
          ],
@@ -367,7 +368,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sort_desc(sum(rate(container_network_transmit_packets_total{job=\"cadvisor\", cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n* on (namespace,pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=~\"$namespace\", workload=~\"$workload\", workload_type=~\"$type\"}) by (pod))\n",
+               "expr": "sort_desc(sum(rate(container_network_transmit_packets_total{job=\"kubelet\", cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n* on (namespace,pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=~\"$namespace\", workload=~\"$workload\", workload_type=~\"$type\"}) by (pod))\n",
                "legendFormat": "__auto"
             }
          ],
@@ -418,7 +419,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sort_desc(sum(rate(container_network_receive_packets_dropped_total{job=\"cadvisor\", cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n* on (namespace,pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=~\"$namespace\", workload=~\"$workload\", workload_type=~\"$type\"}) by (pod))\n",
+               "expr": "sort_desc(sum(rate(container_network_receive_packets_dropped_total{job=\"kubelet\", cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n* on (namespace,pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=~\"$namespace\", workload=~\"$workload\", workload_type=~\"$type\"}) by (pod))\n",
                "legendFormat": "__auto"
             }
          ],
@@ -469,7 +470,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sort_desc(sum(rate(container_network_transmit_packets_dropped_total{job=\"cadvisor\", cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n* on (namespace,pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=~\"$namespace\", workload=~\"$workload\", workload_type=~\"$type\"}) by (pod))\n",
+               "expr": "sort_desc(sum(rate(container_network_transmit_packets_dropped_total{job=\"kubelet\", cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n* on (namespace,pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\",namespace=~\"$namespace\", workload=~\"$workload\", workload_type=~\"$type\"}) by (pod))\n",
                "legendFormat": "__auto"
             }
          ],
@@ -480,7 +481,8 @@
    "refresh": "10s",
    "schemaVersion": 39,
    "tags": [
-      "kubernetes-mixin"
+      "ZKube",
+      "generated"
    ],
    "templating": {
       "list": [
@@ -502,7 +504,7 @@
                "type": "prometheus",
                "uid": "${datasource}"
             },
-            "hide": 2,
+            "hide": 0,
             "label": "cluster",
             "name": "cluster",
             "query": "label_values(kube_pod_info{job=\"kube-state-metrics\"}, cluster)",

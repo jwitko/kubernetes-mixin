@@ -1,5 +1,19 @@
 {
    "editable": false,
+   "links": [
+      {
+         "asDropdown": true,
+         "includeVars": true,
+         "keepTime": true,
+         "tags": [
+            "ZKube",
+            "generated"
+         ],
+         "targetBlank": false,
+         "title": "Kubernetes",
+         "type": "dashboards"
+      }
+   ],
    "panels": [
       {
          "datasource": {
@@ -29,7 +43,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "1 - avg(rate(windows_cpu_time_total{cluster=\"$cluster\", job=\"kubernetes-windows-exporter\", mode=\"idle\"}[$__rate_interval]))",
+               "expr": "sum(cluster:node_cpu:ratio_rate5m) / count(cluster:node_cpu:ratio_rate5m)",
                "instant": true
             }
          ],
@@ -64,7 +78,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(kube_pod_windows_container_resource_cpu_cores_request{cluster=\"$cluster\"}) / sum(node:windows_node_num_cpu:sum{cluster=\"$cluster\"})",
+               "expr": "sum(kube_pod_container_resource_requests{job=\"kube-state-metrics\", resource=\"cpu\"}) / sum(kube_node_status_allocatable{job=\"kube-state-metrics\", resource=\"cpu\"})",
                "instant": true
             }
          ],
@@ -99,7 +113,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(kube_pod_windows_container_resource_cpu_cores_limit{cluster=\"$cluster\"}) / sum(node:windows_node_num_cpu:sum{cluster=\"$cluster\"})",
+               "expr": "sum(kube_pod_container_resource_limits{job=\"kube-state-metrics\", resource=\"cpu\"}) / sum(kube_node_status_allocatable{job=\"kube-state-metrics\", resource=\"cpu\"})",
                "instant": true
             }
          ],
@@ -134,7 +148,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "1 - sum(:windows_node_memory_MemFreeCached_bytes:sum{cluster=\"$cluster\"}) / sum(:windows_node_memory_MemTotal_bytes:sum{cluster=\"$cluster\"})",
+               "expr": "1 - sum(:node_memory_MemAvailable_bytes:sum) / sum(node_memory_MemTotal_bytes{job=\"node-exporter\"})",
                "instant": true
             }
          ],
@@ -169,7 +183,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(kube_pod_windows_container_resource_memory_request{cluster=\"$cluster\"}) / sum(:windows_node_memory_MemTotal_bytes:sum{cluster=\"$cluster\"})",
+               "expr": "sum(kube_pod_container_resource_requests{job=\"kube-state-metrics\", resource=\"memory\"}) / sum(kube_node_status_allocatable{job=\"kube-state-metrics\", resource=\"memory\"})",
                "instant": true
             }
          ],
@@ -204,7 +218,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(kube_pod_windows_container_resource_memory_limit{cluster=\"$cluster\"}) / sum(:windows_node_memory_MemTotal_bytes:sum{cluster=\"$cluster\"})",
+               "expr": "sum(kube_pod_container_resource_limits{job=\"kube-state-metrics\", resource=\"memory\"}) / sum(kube_node_status_allocatable{job=\"kube-state-metrics\", resource=\"memory\"})",
                "instant": true
             }
          ],
@@ -219,9 +233,7 @@
          "fieldConfig": {
             "defaults": {
                "custom": {
-                  "fillOpacity": 10,
-                  "showPoints": "never",
-                  "spanNulls": true
+                  "showPoints": "never"
                }
             }
          },
@@ -229,16 +241,13 @@
             "h": 7,
             "w": 24,
             "x": 0,
-            "y": 7
+            "y": 1
          },
          "id": 7,
          "interval": "1m",
          "options": {
             "legend": {
                "asTable": true,
-               "calcs": [
-                  "lastNotNull"
-               ],
                "displayMode": "table",
                "placement": "right",
                "showLegend": true
@@ -254,7 +263,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(namespace_pod_container:windows_container_cpu_usage_seconds_total:sum_rate{cluster=\"$cluster\"}) by (namespace)",
+               "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate5m) by (cluster)",
                "legendFormat": "__auto"
             }
          ],
@@ -283,15 +292,15 @@
                {
                   "matcher": {
                      "id": "byName",
-                     "options": "Namespace"
+                     "options": "Cluster"
                   },
                   "properties": [
                      {
                         "id": "links",
                         "value": [
                            {
-                              "title": "Drill down to pods",
-                              "url": "/d/490b402361724ab1d4c45666c1fa9b6f/k8s-resources-windows-namespace?${datasource:queryparam}&var-cluster=$cluster&var-namespace=${__data.fields.Namespace}"
+                              "title": "Drill down",
+                              "url": "/d/efa86fd1d0c121a26444b636a3f509a8/kubernetes-compute-resources-cluster?${datasource:queryparam}&var-cluster=${__data.fields.Cluster}"
                            }
                         ]
                      }
@@ -303,7 +312,7 @@
             "h": 7,
             "w": 24,
             "x": 0,
-            "y": 14
+            "y": 2
          },
          "id": 8,
          "pluginVersion": "v11.4.0",
@@ -313,7 +322,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(namespace_pod_container:windows_container_cpu_usage_seconds_total:sum_rate{cluster=\"$cluster\"}) by (namespace)",
+               "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate5m) by (cluster)",
                "format": "table",
                "instant": true
             },
@@ -322,7 +331,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(kube_pod_windows_container_resource_cpu_cores_request{cluster=\"$cluster\"}) by (namespace)",
+               "expr": "sum(kube_pod_container_resource_requests{job=\"kube-state-metrics\", resource=\"cpu\"}) by (cluster)",
                "format": "table",
                "instant": true
             },
@@ -331,7 +340,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(namespace_pod_container:windows_container_cpu_usage_seconds_total:sum_rate{cluster=\"$cluster\"}) by (namespace) / sum(kube_pod_windows_container_resource_cpu_cores_request{cluster=\"$cluster\"}) by (namespace)",
+               "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate5m) by (cluster) / sum(kube_pod_container_resource_requests{job=\"kube-state-metrics\", resource=\"cpu\"}) by (cluster)",
                "format": "table",
                "instant": true
             },
@@ -340,7 +349,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(kube_pod_windows_container_resource_cpu_cores_limit{cluster=\"$cluster\"}) by (namespace)",
+               "expr": "sum(kube_pod_container_resource_limits{job=\"kube-state-metrics\", resource=\"cpu\"}) by (cluster)",
                "format": "table",
                "instant": true
             },
@@ -349,7 +358,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(namespace_pod_container:windows_container_cpu_usage_seconds_total:sum_rate{cluster=\"$cluster\"}) by (namespace) / sum(kube_pod_windows_container_resource_cpu_cores_limit{cluster=\"$cluster\"}) by (namespace)",
+               "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate5m) by (cluster) / sum(kube_pod_container_resource_limits{job=\"kube-state-metrics\", resource=\"cpu\"}) by (cluster)",
                "format": "table",
                "instant": true
             }
@@ -359,7 +368,7 @@
             {
                "id": "joinByField",
                "options": {
-                  "byField": "namespace",
+                  "byField": "cluster",
                   "mode": "outer"
                }
             },
@@ -385,7 +394,7 @@
                      "Value #C": 8,
                      "Value #D": 9,
                      "Value #E": 10,
-                     "namespace": 5
+                     "cluster": 5
                   },
                   "renameByName": {
                      "Value #A": "CPU Usage",
@@ -393,7 +402,7 @@
                      "Value #C": "CPU Requests %",
                      "Value #D": "CPU Limits",
                      "Value #E": "CPU Limits %",
-                     "namespace": "Namespace"
+                     "cluster": "Cluster"
                   }
                }
             }
@@ -408,27 +417,22 @@
          "fieldConfig": {
             "defaults": {
                "custom": {
-                  "fillOpacity": 10,
-                  "showPoints": "never",
-                  "spanNulls": true
+                  "showPoints": "never"
                },
-               "unit": "decbytes"
+               "unit": "bytes"
             }
          },
          "gridPos": {
             "h": 7,
             "w": 24,
             "x": 0,
-            "y": 21
+            "y": 3
          },
          "id": 9,
          "interval": "1m",
          "options": {
             "legend": {
                "asTable": true,
-               "calcs": [
-                  "lastNotNull"
-               ],
                "displayMode": "table",
                "placement": "right",
                "showLegend": true
@@ -444,11 +448,11 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(windows_container_private_working_set_usage{cluster=\"$cluster\"}) by (namespace)",
+               "expr": "sum(container_memory_rss{job=\"kubelet\", container!=\"\"}) by (cluster)",
                "legendFormat": "__auto"
             }
          ],
-         "title": "Memory Usage (Private Working Set)",
+         "title": "Memory Usage (w/o cache)",
          "type": "timeseries"
       },
       {
@@ -476,51 +480,15 @@
                {
                   "matcher": {
                      "id": "byName",
-                     "options": "Memory Usage"
-                  },
-                  "properties": [
-                     {
-                        "id": "unit",
-                        "value": "decbytes"
-                     }
-                  ]
-               },
-               {
-                  "matcher": {
-                     "id": "byName",
-                     "options": "Memory Requests"
-                  },
-                  "properties": [
-                     {
-                        "id": "unit",
-                        "value": "decbytes"
-                     }
-                  ]
-               },
-               {
-                  "matcher": {
-                     "id": "byName",
-                     "options": "Memory Limits"
-                  },
-                  "properties": [
-                     {
-                        "id": "unit",
-                        "value": "decbytes"
-                     }
-                  ]
-               },
-               {
-                  "matcher": {
-                     "id": "byName",
-                     "options": "Namespace"
+                     "options": "Cluster"
                   },
                   "properties": [
                      {
                         "id": "links",
                         "value": [
                            {
-                              "title": "Drill down to pods",
-                              "url": "/d/490b402361724ab1d4c45666c1fa9b6f/k8s-resources-windows-namespace?${datasource:queryparam}&var-cluster=$cluster&var-namespace=${__data.fields.Namespace}"
+                              "title": "Drill down",
+                              "url": "/d/efa86fd1d0c121a26444b636a3f509a8/kubernetes-compute-resources-cluster?${datasource:queryparam}&var-cluster=${__data.fields.Cluster}"
                            }
                         ]
                      }
@@ -532,7 +500,7 @@
             "h": 7,
             "w": 24,
             "x": 0,
-            "y": 28
+            "y": 4
          },
          "id": 10,
          "pluginVersion": "v11.4.0",
@@ -542,7 +510,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(windows_container_private_working_set_usage{cluster=\"$cluster\"}) by (namespace)",
+               "expr": "sum(container_memory_rss{job=\"kubelet\", container!=\"\"}) by (cluster)",
                "format": "table",
                "instant": true
             },
@@ -551,7 +519,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(kube_pod_windows_container_resource_memory_request{cluster=\"$cluster\"}) by (namespace)",
+               "expr": "sum(kube_pod_container_resource_requests{job=\"kube-state-metrics\", resource=\"memory\"}) by (cluster)",
                "format": "table",
                "instant": true
             },
@@ -560,7 +528,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(windows_container_private_working_set_usage{cluster=\"$cluster\"}) by (namespace) / sum(kube_pod_windows_container_resource_memory_request{cluster=\"$cluster\"}) by (namespace)",
+               "expr": "sum(container_memory_rss{job=\"kubelet\", container!=\"\"}) by (cluster) / sum(kube_pod_container_resource_requests{job=\"kube-state-metrics\", resource=\"memory\"}) by (cluster)",
                "format": "table",
                "instant": true
             },
@@ -569,7 +537,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(kube_pod_windows_container_resource_memory_limit{cluster=\"$cluster\"}) by (namespace)",
+               "expr": "sum(kube_pod_container_resource_limits{job=\"kube-state-metrics\", resource=\"memory\"}) by (cluster)",
                "format": "table",
                "instant": true
             },
@@ -578,17 +546,17 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(windows_container_private_working_set_usage{cluster=\"$cluster\"}) by (namespace) / sum(kube_pod_windows_container_resource_memory_limit{cluster=\"$cluster\"}) by (namespace)",
+               "expr": "sum(container_memory_rss{job=\"kubelet\", container!=\"\"}) by (cluster) / sum(kube_pod_container_resource_limits{job=\"kube-state-metrics\", resource=\"memory\"}) by (cluster)",
                "format": "table",
                "instant": true
             }
          ],
-         "title": "Memory Requests by Namespace",
+         "title": "Memory Requests by Cluster",
          "transformations": [
             {
                "id": "joinByField",
                "options": {
-                  "byField": "namespace",
+                  "byField": "cluster",
                   "mode": "outer"
                }
             },
@@ -614,7 +582,7 @@
                      "Value #C": 8,
                      "Value #D": 9,
                      "Value #E": 10,
-                     "namespace": 5
+                     "cluster": 5
                   },
                   "renameByName": {
                      "Value #A": "Memory Usage",
@@ -622,7 +590,7 @@
                      "Value #C": "Memory Requests %",
                      "Value #D": "Memory Limits",
                      "Value #E": "Memory Limits %",
-                     "namespace": "Namespace"
+                     "cluster": "Cluster"
                   }
                }
             }
@@ -650,19 +618,6 @@
             "query": "prometheus",
             "regex": "",
             "type": "datasource"
-         },
-         {
-            "datasource": {
-               "type": "prometheus",
-               "uid": "${datasource}"
-            },
-            "hide": 0,
-            "label": "cluster",
-            "name": "cluster",
-            "query": "label_values(up{job=\"kubernetes-windows-exporter\"}, cluster)",
-            "refresh": 2,
-            "sort": 1,
-            "type": "query"
          }
       ]
    },
@@ -670,7 +625,7 @@
       "from": "now-1h",
       "to": "now"
    },
-   "timezone": "utc",
-   "title": "Kubernetes / Compute Resources / Cluster(Windows)",
-   "uid": "4d08557fd9391b100730f2494bccac68"
+   "timezone": "UTC",
+   "title": "Kubernetes / Compute Resources /  Multi-Cluster",
+   "uid": "b59e6c9f2fcbe2e16d77fc492374cc4f"
 }

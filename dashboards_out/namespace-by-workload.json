@@ -6,7 +6,8 @@
          "includeVars": true,
          "keepTime": true,
          "tags": [
-            "kubernetes-mixin"
+            "ZKube",
+            "generated"
          ],
          "targetBlank": false,
          "title": "Kubernetes",
@@ -710,7 +711,8 @@
    "refresh": "10s",
    "schemaVersion": 39,
    "tags": [
-      "kubernetes-mixin"
+      "ZKube",
+      "generated"
    ],
    "templating": {
       "list": [
@@ -732,10 +734,10 @@
                "type": "prometheus",
                "uid": "${datasource}"
             },
-            "hide": 2,
+            "hide": 0,
             "label": "cluster",
             "name": "cluster",
-            "query": "label_values(up{job=\"cadvisor\"}, cluster)",
+            "query": "label_values(up{job=\"kubelet\"}, cluster)",
             "refresh": 2,
             "sort": 1,
             "type": "query"

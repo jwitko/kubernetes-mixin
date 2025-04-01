@@ -6,7 +6,8 @@
          "includeVars": true,
          "keepTime": true,
          "tags": [
-            "kubernetes-mixin"
+            "ZKube",
+            "generated"
          ],
          "targetBlank": false,
          "title": "Kubernetes",
@@ -588,7 +589,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(rate(workqueue_adds_total{job=\"kube-apiserver\", instance=~\"$instance\", cluster=\"$cluster\"}[$__rate_interval])) by (instance, name)",
+               "expr": "sum(rate(workqueue_adds_total{job=\"apiserver\", instance=~\"$instance\", cluster=\"$cluster\"}[$__rate_interval])) by (instance, name)",
                "legendFormat": "{{instance}} {{name}}"
             }
          ],
@@ -631,7 +632,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(rate(workqueue_depth{job=\"kube-apiserver\", instance=~\"$instance\", cluster=\"$cluster\"}[$__rate_interval])) by (instance, name)",
+               "expr": "sum(rate(workqueue_depth{job=\"apiserver\", instance=~\"$instance\", cluster=\"$cluster\"}[$__rate_interval])) by (instance, name)",
                "legendFormat": "{{instance}} {{name}}"
             }
          ],
@@ -677,7 +678,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "histogram_quantile(0.99, sum(rate(workqueue_queue_duration_seconds_bucket{job=\"kube-apiserver\", instance=~\"$instance\", cluster=\"$cluster\"}[$__rate_interval])) by (instance, name, le))",
+               "expr": "histogram_quantile(0.99, sum(rate(workqueue_queue_duration_seconds_bucket{job=\"apiserver\", instance=~\"$instance\", cluster=\"$cluster\"}[$__rate_interval])) by (instance, name, le))",
                "legendFormat": "{{instance}} {{name}}"
             }
          ],
@@ -719,7 +720,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "process_resident_memory_bytes{job=\"kube-apiserver\",instance=~\"$instance\", cluster=\"$cluster\"}",
+               "expr": "process_resident_memory_bytes{job=\"apiserver\",instance=~\"$instance\", cluster=\"$cluster\"}",
                "legendFormat": "{{instance}}"
             }
          ],
@@ -762,7 +763,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "rate(process_cpu_seconds_total{job=\"kube-apiserver\",instance=~\"$instance\", cluster=\"$cluster\"}[$__rate_interval])",
+               "expr": "rate(process_cpu_seconds_total{job=\"apiserver\",instance=~\"$instance\", cluster=\"$cluster\"}[$__rate_interval])",
                "legendFormat": "{{instance}}"
             }
          ],
@@ -804,7 +805,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "go_goroutines{job=\"kube-apiserver\",instance=~\"$instance\", cluster=\"$cluster\"}",
+               "expr": "go_goroutines{job=\"apiserver\",instance=~\"$instance\", cluster=\"$cluster\"}",
                "legendFormat": "{{instance}}"
             }
          ],
@@ -815,7 +816,8 @@
    "refresh": "10s",
    "schemaVersion": 39,
    "tags": [
-      "kubernetes-mixin"
+      "ZKube",
+      "generated"
    ],
    "templating": {
       "list": [
@@ -837,10 +839,10 @@
                "type": "prometheus",
                "uid": "${datasource}"
             },
-            "hide": 2,
+            "hide": 0,
             "label": "cluster",
             "name": "cluster",
-            "query": "label_values(up{job=\"kube-apiserver\"}, cluster)",
+            "query": "label_values(up{job=\"apiserver\"}, cluster)",
             "refresh": 2,
             "sort": 1,
             "type": "query"
@@ -853,7 +855,7 @@
             "hide": 0,
             "includeAll": true,
             "name": "instance",
-            "query": "label_values(up{job=\"kube-apiserver\", cluster=\"$cluster\"}, instance)",
+            "query": "label_values(up{job=\"apiserver\", cluster=\"$cluster\"}, instance)",
             "refresh": 2,
             "sort": 1,
             "type": "query"
