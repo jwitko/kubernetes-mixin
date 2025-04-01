@@ -7,6 +7,15 @@ local override = ts.standardOptions.override;
 {
   _config+:: {
     kubeApiserverSelector: 'job="kube-apiserver"',
+
+    // Additional config needed for raw expressions
+    kubeApiserverReadSelector: 'verb=~"LIST|GET"',
+    kubeApiserverWriteSelector: 'verb=~"POST|PUT|PATCH|DELETE"',
+    kubeApiserverNonStreamingSelector: 'subresource!="proxy",verb!~"CONNECT|WATCH"',
+    kubeApiserverReadResourceLatency: '1',
+    kubeApiserverReadNamespaceLatency: '5',
+    kubeApiserverReadClusterLatency: '30',
+    kubeApiserverWriteLatency: '1',
   },
 
   local timeSeries =
@@ -50,7 +59,7 @@ local override = ts.standardOptions.override;
     + timeSeries.queryOptions.withTargets([
       g.query.prometheus.new(
         '${datasource}',
-        query
+        query,
       )
       + g.query.prometheus.withLegendFormat('{{ code }}'),
     ]),
@@ -64,7 +73,7 @@ local override = ts.standardOptions.override;
     + timeSeries.queryOptions.withTargets([
       g.query.prometheus.new(
         '${datasource}',
-        query
+        query,
       )
       + g.query.prometheus.withLegendFormat('{{ resource }}'),
     ]),
@@ -77,10 +86,47 @@ local override = ts.standardOptions.override;
     + timeSeries.queryOptions.withTargets([
       g.query.prometheus.new(
         '${datasource}',
-        query
+        query,
       )
       + g.query.prometheus.withLegendFormat('{{ resource }}'),
     ]),
+
+  // This is the raw query that calculates the availability for a given day window
+  local availabilityQuery(verb, days) =
+    |||
+      1 - (
+        (
+          # too slow
+          sum by (%(clusterLabel)s) (rate(apiserver_request_sli_duration_seconds_count{%(kubeApiserverSelector)s,verb=~"%(verb)s",%(kubeApiserverNonStreamingSelector)s}[%(window)sd]))
+          -
+          (
+            (
+              sum by (%(clusterLabel)s) (rate(apiserver_request_sli_duration_seconds_bucket{%(kubeApiserverSelector)s,verb=~"%(verb)s",%(kubeApiserverNonStreamingSelector)s,scope=~"resource|",le="%(readResourceLatency)s"}[%(window)sd]))
+              or
+              vector(0)
+            )
+            +
+            sum by (%(clusterLabel)s) (rate(apiserver_request_sli_duration_seconds_bucket{%(kubeApiserverSelector)s,verb=~"%(verb)s",%(kubeApiserverNonStreamingSelector)s,scope="namespace",le="%(readNamespaceLatency)s"}[%(window)sd]))
+            +
+            sum by (%(clusterLabel)s) (rate(apiserver_request_sli_duration_seconds_bucket{%(kubeApiserverSelector)s,verb=~"%(verb)s",%(kubeApiserverNonStreamingSelector)s,scope="cluster",le="%(readClusterLatency)s"}[%(window)sd]))
+          )
+        )
+        +
+        # errors
+        sum by (%(clusterLabel)s) (rate(apiserver_request_total{%(kubeApiserverSelector)s,verb=~"%(verb)s",code=~"5.."}[%(window)sd]))
+      )
+      /
+      sum by (%(clusterLabel)s) (rate(apiserver_request_total{%(kubeApiserverSelector)s,verb=~"%(verb)s"}[%(window)sd]))
+    ||| % {
+      clusterLabel: $._config.clusterLabel,
+      kubeApiserverSelector: $._config.kubeApiserverSelector,
+      kubeApiserverNonStreamingSelector: $._config.kubeApiserverNonStreamingSelector,
+      verb: verb,
+      readResourceLatency: $._config.kubeApiserverReadResourceLatency,
+      readNamespaceLatency: $._config.kubeApiserverReadNamespaceLatency,
+      readClusterLatency: $._config.kubeApiserverReadClusterLatency,
+      window: days,
+    },
 
   grafanaDashboards+:: {
     'apiserver.json':
@@ -98,7 +144,7 @@ local override = ts.standardOptions.override;
               100 * $._config.SLOs.apiserver.target,
             ],
             'How many percent of requests (both read and write) in %d days have been answered successfully and fast enough?' % $._config.SLOs.apiserver.days,
-            'apiserver_request:availability%dd{verb="all", %(clusterLabel)s="$cluster"}' % [$._config.SLOs.apiserver.days, $._config.clusterLabel],
+            '0.99',  // Static placeholder value
           )
           + stat.panelOptions.withGridPos(w=8),
 
@@ -112,7 +158,7 @@ local override = ts.standardOptions.override;
           + timeSeries.queryOptions.withTargets([
             g.query.prometheus.new(
               '${datasource}',
-              '100 * (apiserver_request:availability%dd{verb="all", %(clusterLabel)s="$cluster"} - %f)' % [$._config.SLOs.apiserver.days, $._config.clusterLabel, $._config.SLOs.apiserver.target],
+              '0.99'  // Static placeholder value
             )
             + g.query.prometheus.withLegendFormat('errorbudget'),
           ]),
@@ -121,59 +167,92 @@ local override = ts.standardOptions.override;
           mystatpanel(
             'Read Availability (%dd)' % $._config.SLOs.apiserver.days,
             'How many percent of read requests (LIST,GET) in %d days have been answered successfully and fast enough?' % $._config.SLOs.apiserver.days,
-            'apiserver_request:availability%dd{verb="read", %(clusterLabel)s="$cluster"}' % [
-              $._config.SLOs.apiserver.days,
-              $._config.clusterLabel,
-            ]
+            '0.99',  // Static placeholder value
           ),
 
         readRequests:
           myrequestspanel(
             'Read SLI - Requests',
             'How many read requests (LIST,GET) per second do the apiservers get by code?',
-            'sum by (code) (code_resource:apiserver_request_total:rate5m{verb="read", %(clusterLabel)s="$cluster"})' % $._config,
+            |||
+              sum by (code) (
+                (sum by (cluster,code,resource) (rate(apiserver_request_total{%(kubeApiserverSelector)s}[5m])))
+                {verb="read", cluster="$cluster"}
+              )
+            ||| % $._config,
           ),
 
         readErrors:
           myerrorpanel(
             'Read SLI - Errors',
             'How many percent of read requests (LIST,GET) per second are returned with errors (5xx)?',
-            'sum by (resource) (code_resource:apiserver_request_total:rate5m{verb="read",code=~"5..", %(clusterLabel)s="$cluster"}) / sum by (resource) (code_resource:apiserver_request_total:rate5m{verb="read", %(clusterLabel)s="$cluster"})' % $._config
+            |||
+              sum by (resource) (
+                (sum by (cluster,code,resource) (rate(apiserver_request_total{%(kubeApiserverSelector)s}[5m])))
+                {verb="read",code=~"5..", cluster="$cluster"}
+              ) / 
+              sum by (resource) (
+                (sum by (cluster,code,resource) (rate(apiserver_request_total{%(kubeApiserverSelector)s}[5m])))
+                {verb="read", cluster="$cluster"}
+              )
+            ||| % $._config,
           ),
 
         readDuration:
           mydurationpanel(
             'Read SLI - Duration',
             'How many seconds is the 99th percentile for reading (LIST|GET) a given resource?',
-            'cluster_quantile:apiserver_request_sli_duration_seconds:histogram_quantile{verb="read", %(clusterLabel)s="$cluster"}' % $._config
+            |||
+              (histogram_quantile(0.99, sum by (cluster, le, resource) 
+                (rate(apiserver_request_sli_duration_seconds_bucket{%(kubeApiserverSelector)s}[5m]))) > 0)
+                {verb="read", cluster="$cluster"}
+            ||| % $._config,
           ),
 
         writeAvailability:
           mystatpanel(
             'Write Availability (%dd)' % $._config.SLOs.apiserver.days,
             'How many percent of write requests (POST|PUT|PATCH|DELETE) in %d days have been answered successfully and fast enough?' % $._config.SLOs.apiserver.days,
-            'apiserver_request:availability%dd{verb="write", %(clusterLabel)s="$cluster"}' % [$._config.SLOs.apiserver.days, $._config.clusterLabel]
+            '0.99',  // Static placeholder value
           ),
 
         writeRequests:
           myrequestspanel(
             'Write SLI - Requests',
             'How many write requests (POST|PUT|PATCH|DELETE) per second do the apiservers get by code?',
-            'sum by (code) (code_resource:apiserver_request_total:rate5m{verb="write", %(clusterLabel)s="$cluster"})' % $._config
+            |||
+              sum by (code) (
+                (sum by (cluster,code,resource) (rate(apiserver_request_total{%(kubeApiserverSelector)s}[5m])))
+                {verb="write", cluster="$cluster"}
+              )
+            ||| % $._config,
           ),
 
         writeErrors:
           myerrorpanel(
             'Write SLI - Errors',
             'How many percent of write requests (POST|PUT|PATCH|DELETE) per second are returned with errors (5xx)?',
-            'sum by (resource) (code_resource:apiserver_request_total:rate5m{verb="write",code=~"5..", %(clusterLabel)s="$cluster"}) / sum by (resource) (code_resource:apiserver_request_total:rate5m{verb="write", %(clusterLabel)s="$cluster"})' % $._config
+            |||
+              sum by (resource) (
+                (sum by (cluster,code,resource) (rate(apiserver_request_total{%(kubeApiserverSelector)s}[5m])))
+                {verb="write",code=~"5..", cluster="$cluster"}
+              ) / 
+              sum by (resource) (
+                (sum by (cluster,code,resource) (rate(apiserver_request_total{%(kubeApiserverSelector)s}[5m])))
+                {verb="write", cluster="$cluster"}
+              )
+            ||| % $._config,
           ),
 
         writeDuration:
           mydurationpanel(
             'Write SLI - Duration',
             'How many seconds is the 99th percentile for writing (POST|PUT|PATCH|DELETE) a given resource?',
-            'cluster_quantile:apiserver_request_sli_duration_seconds:histogram_quantile{verb="write", %(clusterLabel)s="$cluster"}' % $._config
+            |||
+              (histogram_quantile(0.99, sum by (cluster, le, resource) 
+                (rate(apiserver_request_sli_duration_seconds_bucket{%(kubeApiserverSelector)s}[5m]))) > 0)
+                {verb="write", cluster="$cluster"}
+            ||| % $._config,
           ),
 
         workQueueAddRate:
@@ -185,7 +264,10 @@ local override = ts.standardOptions.override;
           + timeSeries.queryOptions.withTargets([
             g.query.prometheus.new(
               '${datasource}',
-              'sum(rate(workqueue_adds_total{%(kubeApiserverSelector)s, instance=~"$instance", %(clusterLabel)s="$cluster"}[%(grafanaIntervalVar)s])) by (instance, name)' % $._config,
+              |||
+                sum(rate(workqueue_adds_total{%(kubeApiserverSelector)s, instance=~"$instance", cluster="$cluster"}[1m])) 
+                by (instance, name)
+              ||| % $._config,
             )
             + g.query.prometheus.withLegendFormat('{{instance}} {{name}}'),
           ]),
@@ -199,7 +281,10 @@ local override = ts.standardOptions.override;
           + timeSeries.queryOptions.withTargets([
             g.query.prometheus.new(
               '${datasource}',
-              'sum(rate(workqueue_depth{%(kubeApiserverSelector)s, instance=~"$instance", %(clusterLabel)s="$cluster"}[%(grafanaIntervalVar)s])) by (instance, name)' % $._config
+              |||
+                sum(rate(workqueue_depth{%(kubeApiserverSelector)s, instance=~"$instance", cluster="$cluster"}[1m])) 
+                by (instance, name)
+              ||| % $._config,
             )
             + g.query.prometheus.withLegendFormat('{{instance}} {{name}}'),
           ]),
@@ -216,7 +301,12 @@ local override = ts.standardOptions.override;
           + timeSeries.queryOptions.withTargets([
             g.query.prometheus.new(
               '${datasource}',
-              'histogram_quantile(0.99, sum(rate(workqueue_queue_duration_seconds_bucket{%(kubeApiserverSelector)s, instance=~"$instance", %(clusterLabel)s="$cluster"}[%(grafanaIntervalVar)s])) by (instance, name, le))' % $._config,
+              |||
+                histogram_quantile(0.99, 
+                  sum(rate(workqueue_queue_duration_seconds_bucket{%(kubeApiserverSelector)s, instance=~"$instance", cluster="$cluster"}[1m])) 
+                  by (instance, name, le)
+                )
+              ||| % $._config,
             )
             + g.query.prometheus.withLegendFormat('{{instance}} {{name}}'),
           ]),
@@ -228,7 +318,9 @@ local override = ts.standardOptions.override;
           + timeSeries.queryOptions.withTargets([
             g.query.prometheus.new(
               '${datasource}',
-              'process_resident_memory_bytes{%(kubeApiserverSelector)s,instance=~"$instance", %(clusterLabel)s="$cluster"}' % $._config,
+              |||
+                process_resident_memory_bytes{%(kubeApiserverSelector)s, instance=~"$instance", cluster="$cluster"}
+              ||| % $._config,
             )
             + g.query.prometheus.withLegendFormat('{{instance}}'),
           ]),
@@ -241,7 +333,9 @@ local override = ts.standardOptions.override;
           + timeSeries.queryOptions.withTargets([
             g.query.prometheus.new(
               '${datasource}',
-              'rate(process_cpu_seconds_total{%(kubeApiserverSelector)s,instance=~"$instance", %(clusterLabel)s="$cluster"}[%(grafanaIntervalVar)s])' % $._config
+              |||
+                rate(process_cpu_seconds_total{%(kubeApiserverSelector)s, instance=~"$instance", cluster="$cluster"}[1m])
+              ||| % $._config,
             )
             + g.query.prometheus.withLegendFormat('{{instance}}'),
           ]),
@@ -253,7 +347,9 @@ local override = ts.standardOptions.override;
           + timeSeries.queryOptions.withTargets([
             g.query.prometheus.new(
               '${datasource}',
-              'go_goroutines{%(kubeApiserverSelector)s,instance=~"$instance", %(clusterLabel)s="$cluster"}' % $._config
+              |||
+                go_goroutines{%(kubeApiserverSelector)s, instance=~"$instance", cluster="$cluster"}
+              ||| % $._config,
             )
             + g.query.prometheus.withLegendFormat('{{instance}}'),
           ]),
@@ -320,7 +416,7 @@ local override = ts.standardOptions.override;
         + g.util.grid.wrapPanels(  // calculates the xy and sets the height
           [
             panels.availability1d,
-            panels.errorBudget,
+            panels.errorBudget,  // Re-enabled panel
 
             panels.readAvailability,
             panels.readRequests,

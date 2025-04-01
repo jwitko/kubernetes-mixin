@@ -23,6 +23,15 @@ local utils = import '../lib/utils.libsonnet';
         ],
       },
     },
+    
+    // API Server config options
+    kubeApiserverReadSelector: 'verb=~"LIST|GET"',
+    kubeApiserverWriteSelector: 'verb=~"POST|PUT|PATCH|DELETE"',
+    kubeApiserverNonStreamingSelector: 'subresource!="proxy",verb!~"CONNECT|WATCH"',
+    kubeApiserverReadResourceLatency: '1',
+    kubeApiserverReadNamespaceLatency: '5',
+    kubeApiserverReadClusterLatency: '30',
+    kubeApiserverWriteLatency: '1',
   },
 
   prometheusAlerts+:: {
@@ -33,19 +42,76 @@ local utils = import '../lib/utils.libsonnet';
           {
             alert: 'KubeAPIErrorBudgetBurn',
             expr: |||
-              sum by(%s) (apiserver_request:burnrate%s) > (%.2f * %.5f)
-              and on(%s)
-              sum by(%s) (apiserver_request:burnrate%s) > (%.2f * %.5f)
+              sum by(%s) (
+                (
+                  (
+                    # too slow
+                    sum by (%s) (rate(apiserver_request_sli_duration_seconds_count{%s,%s,%s}[%s]))
+                    -
+                    (
+                      (
+                        sum by (%s) (rate(apiserver_request_sli_duration_seconds_bucket{%s,%s,%s,scope=~"resource|",le=~"%s"}[%s]))
+                        or
+                        vector(0)
+                      )
+                      +
+                      sum by (%s) (rate(apiserver_request_sli_duration_seconds_bucket{%s,%s,%s,scope="namespace",le=~"%s"}[%s]))
+                      +
+                      sum by (%s) (rate(apiserver_request_sli_duration_seconds_bucket{%s,%s,%s,scope="cluster",le=~"%s"}[%s]))
+                    )
+                  )
+                  +
+                  # errors
+                  sum by (%s) (rate(apiserver_request_total{%s,%s,code=~"5.."}[%s]))
+                )
+                /
+                sum by (%s) (rate(apiserver_request_total{%s,%s}[%s]))
+              ) > (%.2f * %.5f)
+              and
+              on(%s)
+              sum by(%s) (
+                (
+                  (
+                    # too slow
+                    sum by (%s) (rate(apiserver_request_sli_duration_seconds_count{%s,%s,%s}[%s]))
+                    -
+                    (
+                      (
+                        sum by (%s) (rate(apiserver_request_sli_duration_seconds_bucket{%s,%s,%s,scope=~"resource|",le=~"%s"}[%s]))
+                        or
+                        vector(0)
+                      )
+                      +
+                      sum by (%s) (rate(apiserver_request_sli_duration_seconds_bucket{%s,%s,%s,scope="namespace",le=~"%s"}[%s]))
+                      +
+                      sum by (%s) (rate(apiserver_request_sli_duration_seconds_bucket{%s,%s,%s,scope="cluster",le=~"%s"}[%s]))
+                    )
+                  )
+                  +
+                  # errors
+                  sum by (%s) (rate(apiserver_request_total{%s,%s,code=~"5.."}[%s]))
+                )
+                /
+                sum by (%s) (rate(apiserver_request_total{%s,%s}[%s]))
+              ) > (%.2f * %.5f)
             ||| % [
               $._config.clusterLabel,
-              w.long,
-              w.factor,
-              (1 - $._config.SLOs.apiserver.target),
+              $._config.clusterLabel, $._config.kubeApiserverSelector, $._config.kubeApiserverReadSelector, $._config.kubeApiserverNonStreamingSelector, w.long,
+              $._config.clusterLabel, $._config.kubeApiserverSelector, $._config.kubeApiserverReadSelector, $._config.kubeApiserverNonStreamingSelector, $._config.kubeApiserverReadResourceLatency, w.long,
+              $._config.clusterLabel, $._config.kubeApiserverSelector, $._config.kubeApiserverReadSelector, $._config.kubeApiserverNonStreamingSelector, $._config.kubeApiserverReadNamespaceLatency, w.long,
+              $._config.clusterLabel, $._config.kubeApiserverSelector, $._config.kubeApiserverReadSelector, $._config.kubeApiserverNonStreamingSelector, $._config.kubeApiserverReadClusterLatency, w.long,
+              $._config.clusterLabel, $._config.kubeApiserverSelector, $._config.kubeApiserverReadSelector, w.long,
+              $._config.clusterLabel, $._config.kubeApiserverSelector, $._config.kubeApiserverReadSelector, w.long,
+              w.factor, (1 - $._config.SLOs.apiserver.target),
               $._config.clusterLabel,
               $._config.clusterLabel,
-              w.short,
-              w.factor,
-              (1 - $._config.SLOs.apiserver.target),
+              $._config.clusterLabel, $._config.kubeApiserverSelector, $._config.kubeApiserverReadSelector, $._config.kubeApiserverNonStreamingSelector, w.short,
+              $._config.clusterLabel, $._config.kubeApiserverSelector, $._config.kubeApiserverReadSelector, $._config.kubeApiserverNonStreamingSelector, $._config.kubeApiserverReadResourceLatency, w.short,
+              $._config.clusterLabel, $._config.kubeApiserverSelector, $._config.kubeApiserverReadSelector, $._config.kubeApiserverNonStreamingSelector, $._config.kubeApiserverReadNamespaceLatency, w.short,
+              $._config.clusterLabel, $._config.kubeApiserverSelector, $._config.kubeApiserverReadSelector, $._config.kubeApiserverNonStreamingSelector, $._config.kubeApiserverReadClusterLatency, w.short,
+              $._config.clusterLabel, $._config.kubeApiserverSelector, $._config.kubeApiserverReadSelector, w.short,
+              $._config.clusterLabel, $._config.kubeApiserverSelector, $._config.kubeApiserverReadSelector, w.short,
+              w.factor, (1 - $._config.SLOs.apiserver.target),
             ],
             labels: {
               severity: w.severity,

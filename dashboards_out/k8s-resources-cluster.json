@@ -43,7 +43,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "cluster:node_cpu:ratio_rate5m{cluster=\"$cluster\"}",
+               "expr": "(avg by (cluster) ( (avg by (cluster, node) ( sum without (mode) ( rate(node_cpu_seconds_total{mode!=\"idle\",mode!=\"iowait\",mode!=\"steal\",job=\"node-exporter\"}[5m]) ) )) )){cluster=\"$cluster\"}",
                "instant": true
             }
          ],
@@ -78,7 +78,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(namespace_cpu:kube_pod_container_resource_requests:sum{cluster=\"$cluster\"}) / sum(kube_node_status_allocatable{job=\"kube-state-metrics\",resource=\"cpu\",cluster=\"$cluster\"})",
+               "expr": "sum((sum by (namespace, cluster) ( sum by (namespace, pod, cluster) ( max by (namespace, pod, container, cluster) ( kube_pod_container_resource_requests{resource=\"cpu\",job=\"kube-state-metrics\"} ) * on(namespace, pod, cluster) group_left() max by (namespace, pod, cluster) ( kube_pod_status_phase{phase=~\"Pending|Running\"} == 1 ) ) )){cluster=\"$cluster\"}) / sum(kube_node_status_allocatable{job=\"kube-state-metrics\",resource=\"cpu\",cluster=\"$cluster\"})",
                "instant": true
             }
          ],
@@ -113,7 +113,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(namespace_cpu:kube_pod_container_resource_limits:sum{cluster=\"$cluster\"}) / sum(kube_node_status_allocatable{job=\"kube-state-metrics\",resource=\"cpu\",cluster=\"$cluster\"})",
+               "expr": "sum((sum by (namespace, cluster) ( sum by (namespace, pod, cluster) ( max by (namespace, pod, container, cluster) ( kube_pod_container_resource_limits{resource=\"cpu\",job=\"kube-state-metrics\"} ) * on(namespace, pod, cluster) group_left() max by (namespace, pod, cluster) ( kube_pod_status_phase{phase=~\"Pending|Running\"} == 1 ) ) )){cluster=\"$cluster\"}) / sum(kube_node_status_allocatable{job=\"kube-state-metrics\",resource=\"cpu\",cluster=\"$cluster\"})",
                "instant": true
             }
          ],
@@ -148,7 +148,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "1 - sum(:node_memory_MemAvailable_bytes:sum{cluster=\"$cluster\"}) / sum(node_memory_MemTotal_bytes{job=\"node-exporter\",cluster=\"$cluster\"})",
+               "expr": "1 - sum((sum( node_memory_MemAvailable_bytes{job=\"node-exporter\"} or ( node_memory_Buffers_bytes{job=\"node-exporter\"} + node_memory_Cached_bytes{job=\"node-exporter\"} + node_memory_MemFree_bytes{job=\"node-exporter\"} + node_memory_Slab_bytes{job=\"node-exporter\"} ) ) by (cluster)){cluster=\"$cluster\"}) / sum(node_memory_MemTotal_bytes{job=\"node-exporter\",cluster=\"$cluster\"})",
                "instant": true
             }
          ],
@@ -183,7 +183,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(namespace_memory:kube_pod_container_resource_requests:sum{cluster=\"$cluster\"}) / sum(kube_node_status_allocatable{job=\"kube-state-metrics\",resource=\"memory\",cluster=\"$cluster\"})",
+               "expr": "sum((sum by (namespace, cluster) ( sum by (namespace, pod, cluster) ( max by (namespace, pod, container, cluster) ( kube_pod_container_resource_requests{resource=\"memory\",job=\"kube-state-metrics\"} ) * on(namespace, pod, cluster) group_left() max by (namespace, pod, cluster) ( kube_pod_status_phase{phase=~\"Pending|Running\"} == 1 ) ) )){cluster=\"$cluster\"}) / sum(kube_node_status_allocatable{job=\"kube-state-metrics\",resource=\"memory\",cluster=\"$cluster\"})",
                "instant": true
             }
          ],
@@ -218,7 +218,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(namespace_memory:kube_pod_container_resource_limits:sum{cluster=\"$cluster\"}) / sum(kube_node_status_allocatable{job=\"kube-state-metrics\",resource=\"memory\",cluster=\"$cluster\"})",
+               "expr": "sum((sum by (namespace, cluster) ( sum by (namespace, pod, cluster) ( max by (namespace, pod, container, cluster) ( kube_pod_container_resource_limits{resource=\"memory\",job=\"kube-state-metrics\"} ) * on(namespace, pod, cluster) group_left() max by (namespace, pod, cluster) ( kube_pod_status_phase{phase=~\"Pending|Running\"} == 1 ) ) )){cluster=\"$cluster\"}) / sum(kube_node_status_allocatable{job=\"kube-state-metrics\",resource=\"memory\",cluster=\"$cluster\"})",
                "instant": true
             }
          ],
@@ -268,7 +268,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate5m{cluster=\"$cluster\"}) by (namespace)",
+               "expr": "sum((sum by (cluster, namespace, pod, container) ( rate(container_cpu_usage_seconds_total{job=\"kubelet\", image!=\"\"}[5m]) ) * on (cluster, namespace, pod) group_left(node) topk by (cluster, namespace, pod) ( 1, max by(cluster, namespace, pod, node) (kube_pod_info{node!=\"\"}) )){cluster=\"$cluster\"}) by (namespace)",
                "legendFormat": "__auto"
             }
          ],
@@ -336,7 +336,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "count(avg(namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\"}) by (workload, namespace)) by (namespace)",
+               "expr": "count(avg((max by (cluster, namespace, workload, pod) ( label_replace( kube_pod_owner{job=\"kube-state-metrics\", owner_kind=\"Job\"}, \"workload\", \"$1\", \"owner_name\", \"(.*)\" ) )){cluster=\"$cluster\"}) by (workload, namespace)) by (namespace)",
                "format": "table",
                "instant": true
             },
@@ -345,7 +345,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate5m{cluster=\"$cluster\"}) by (namespace)",
+               "expr": "sum((sum by (cluster, namespace, pod, container) ( rate(container_cpu_usage_seconds_total{job=\"kubelet\", image!=\"\"}[5m]) ) * on (cluster, namespace, pod) group_left(node) topk by (cluster, namespace, pod) ( 1, max by(cluster, namespace, pod, node) (kube_pod_info{node!=\"\"}) )){cluster=\"$cluster\"}) by (namespace)",
                "format": "table",
                "instant": true
             },
@@ -354,7 +354,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(namespace_cpu:kube_pod_container_resource_requests:sum{cluster=\"$cluster\"}) by (namespace)",
+               "expr": "sum((sum by (namespace, cluster) ( sum by (namespace, pod, cluster) ( max by (namespace, pod, container, cluster) ( kube_pod_container_resource_requests{resource=\"cpu\",job=\"kube-state-metrics\"} ) * on(namespace, pod, cluster) group_left() max by (namespace, pod, cluster) ( kube_pod_status_phase{phase=~\"Pending|Running\"} == 1 ) ) )){cluster=\"$cluster\"}) by (namespace)",
                "format": "table",
                "instant": true
             },
@@ -363,7 +363,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate5m{cluster=\"$cluster\"}) by (namespace) / sum(namespace_cpu:kube_pod_container_resource_requests:sum{cluster=\"$cluster\"}) by (namespace)",
+               "expr": "sum((sum by (cluster, namespace, pod, container) ( rate(container_cpu_usage_seconds_total{job=\"kubelet\", image!=\"\"}[5m]) ) * on (cluster, namespace, pod) group_left(node) topk by (cluster, namespace, pod) ( 1, max by(cluster, namespace, pod, node) (kube_pod_info{node!=\"\"}) )){cluster=\"$cluster\"}) by (namespace) / sum((sum by (namespace, cluster) ( sum by (namespace, pod, cluster) ( max by (namespace, pod, container, cluster) ( kube_pod_container_resource_requests{resource=\"cpu\",job=\"kube-state-metrics\"} ) * on(namespace, pod, cluster) group_left() max by (namespace, pod, cluster) ( kube_pod_status_phase{phase=~\"Pending|Running\"} == 1 ) ) )){cluster=\"$cluster\"}) by (namespace)",
                "format": "table",
                "instant": true
             },
@@ -372,7 +372,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(namespace_cpu:kube_pod_container_resource_limits:sum{cluster=\"$cluster\"}) by (namespace)",
+               "expr": "sum((sum by (namespace, cluster) ( sum by (namespace, pod, cluster) ( max by (namespace, pod, container, cluster) ( kube_pod_container_resource_limits{resource=\"cpu\",job=\"kube-state-metrics\"} ) * on(namespace, pod, cluster) group_left() max by (namespace, pod, cluster) ( kube_pod_status_phase{phase=~\"Pending|Running\"} == 1 ) ) )){cluster=\"$cluster\"}) by (namespace)",
                "format": "table",
                "instant": true
             },
@@ -381,7 +381,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate5m{cluster=\"$cluster\"}) by (namespace) / sum(namespace_cpu:kube_pod_container_resource_limits:sum{cluster=\"$cluster\"}) by (namespace)",
+               "expr": "sum((sum by (cluster, namespace, pod, container) ( rate(container_cpu_usage_seconds_total{job=\"kubelet\", image!=\"\"}[5m]) ) * on (cluster, namespace, pod) group_left(node) topk by (cluster, namespace, pod) ( 1, max by(cluster, namespace, pod, node) (kube_pod_info{node!=\"\"}) )){cluster=\"$cluster\"}) by (namespace) / sum((sum by (namespace, cluster) ( sum by (namespace, pod, cluster) ( max by (namespace, pod, container, cluster) ( kube_pod_container_resource_limits{resource=\"cpu\",job=\"kube-state-metrics\"} ) * on(namespace, pod, cluster) group_left() max by (namespace, pod, cluster) ( kube_pod_status_phase{phase=~\"Pending|Running\"} == 1 ) ) )){cluster=\"$cluster\"}) by (namespace)",
                "format": "table",
                "instant": true
             }
@@ -588,7 +588,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "count(avg(namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\"}) by (workload, namespace)) by (namespace)",
+               "expr": "count(avg((max by (cluster, namespace, workload, pod) ( label_replace( kube_pod_owner{job=\"kube-state-metrics\", owner_kind=\"Job\"}, \"workload\", \"$1\", \"owner_name\", \"(.*)\" ) )){cluster=\"$cluster\"}) by (workload, namespace)) by (namespace)",
                "format": "table",
                "instant": true
             },
@@ -606,7 +606,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(namespace_memory:kube_pod_container_resource_requests:sum{cluster=\"$cluster\"}) by (namespace)",
+               "expr": "sum((sum by (namespace, cluster) ( sum by (namespace, pod, cluster) ( max by (namespace, pod, container, cluster) ( kube_pod_container_resource_requests{resource=\"memory\",job=\"kube-state-metrics\"} ) * on(namespace, pod, cluster) group_left() max by (namespace, pod, cluster) ( kube_pod_status_phase{phase=~\"Pending|Running\"} == 1 ) ) )){cluster=\"$cluster\"}) by (namespace)",
                "format": "table",
                "instant": true
             },
@@ -615,7 +615,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(container_memory_rss{job=\"kubelet\", cluster=\"$cluster\", container!=\"\"}) by (namespace) / sum(namespace_memory:kube_pod_container_resource_requests:sum{cluster=\"$cluster\"}) by (namespace)",
+               "expr": "sum(container_memory_rss{job=\"kubelet\", cluster=\"$cluster\", container!=\"\"}) by (namespace) / sum((sum by (namespace, cluster) ( sum by (namespace, pod, cluster) ( max by (namespace, pod, container, cluster) ( kube_pod_container_resource_requests{resource=\"memory\",job=\"kube-state-metrics\"} ) * on(namespace, pod, cluster) group_left() max by (namespace, pod, cluster) ( kube_pod_status_phase{phase=~\"Pending|Running\"} == 1 ) ) )){cluster=\"$cluster\"}) by (namespace)",
                "format": "table",
                "instant": true
             },
@@ -624,7 +624,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(namespace_memory:kube_pod_container_resource_limits:sum{cluster=\"$cluster\"}) by (namespace)",
+               "expr": "sum((sum by (namespace, cluster) ( sum by (namespace, pod, cluster) ( max by (namespace, pod, container, cluster) ( kube_pod_container_resource_limits{resource=\"memory\",job=\"kube-state-metrics\"} ) * on(namespace, pod, cluster) group_left() max by (namespace, pod, cluster) ( kube_pod_status_phase{phase=~\"Pending|Running\"} == 1 ) ) )){cluster=\"$cluster\"}) by (namespace)",
                "format": "table",
                "instant": true
             },
@@ -633,7 +633,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(container_memory_rss{job=\"kubelet\", cluster=\"$cluster\", container!=\"\"}) by (namespace) / sum(namespace_memory:kube_pod_container_resource_limits:sum{cluster=\"$cluster\"}) by (namespace)",
+               "expr": "sum(container_memory_rss{job=\"kubelet\", cluster=\"$cluster\", container!=\"\"}) by (namespace) / sum((sum by (namespace, cluster) ( sum by (namespace, pod, cluster) ( max by (namespace, pod, container, cluster) ( kube_pod_container_resource_limits{resource=\"memory\",job=\"kube-state-metrics\"} ) * on(namespace, pod, cluster) group_left() max by (namespace, pod, cluster) ( kube_pod_status_phase{phase=~\"Pending|Running\"} == 1 ) ) )){cluster=\"$cluster\"}) by (namespace)",
                "format": "table",
                "instant": true
             }

@@ -49,11 +49,11 @@ local utils = import '../lib/utils.libsonnet';
             "for": '10m',
             // Prometheus-specific part
             expr: if $._config.showMultiCluster then |||
-              sum(namespace_cpu:kube_pod_container_resource_requests:sum{%(ignoringOverprovisionedWorkloadSelector)s}) by (%(clusterLabel)s) - (sum(kube_node_status_allocatable{%(kubeStateMetricsSelector)s,resource="cpu"}) by (%(clusterLabel)s) - max(kube_node_status_allocatable{%(kubeStateMetricsSelector)s,resource="cpu"}) by (%(clusterLabel)s)) > 0
+              sum((sum by (namespace, %(clusterLabel)s) ( sum by (namespace, pod, %(clusterLabel)s) ( max by (namespace, pod, container, %(clusterLabel)s) ( kube_pod_container_resource_requests{resource="cpu",%(kubeStateMetricsSelector)s} ) * on(namespace, pod, %(clusterLabel)s) group_left() max by (namespace, pod, %(clusterLabel)s) ( kube_pod_status_phase{phase=~"Pending|Running"} == 1 ) ) )){%(ignoringOverprovisionedWorkloadSelector)s}) by (%(clusterLabel)s) - (sum(kube_node_status_allocatable{%(kubeStateMetricsSelector)s,resource="cpu"}) by (%(clusterLabel)s) - max(kube_node_status_allocatable{%(kubeStateMetricsSelector)s,resource="cpu"}) by (%(clusterLabel)s)) > 0
               and
               (sum(kube_node_status_allocatable{%(kubeStateMetricsSelector)s,resource="cpu"}) by (%(clusterLabel)s) - max(kube_node_status_allocatable{%(kubeStateMetricsSelector)s,resource="cpu"}) by (%(clusterLabel)s)) > 0
             ||| % $._config else |||
-              sum(namespace_cpu:kube_pod_container_resource_requests:sum{%(ignoringOverprovisionedWorkloadSelector)s}) - (sum(kube_node_status_allocatable{resource="cpu", %(kubeStateMetricsSelector)s}) - max(kube_node_status_allocatable{resource="cpu", %(kubeStateMetricsSelector)s})) > 0
+              sum((sum by (namespace, %(clusterLabel)s) ( sum by (namespace, pod, %(clusterLabel)s) ( max by (namespace, pod, container, %(clusterLabel)s) ( kube_pod_container_resource_requests{resource="cpu",%(kubeStateMetricsSelector)s} ) * on(namespace, pod, %(clusterLabel)s) group_left() max by (namespace, pod, %(clusterLabel)s) ( kube_pod_status_phase{phase=~"Pending|Running"} == 1 ) ) )){%(ignoringOverprovisionedWorkloadSelector)s}) - (sum(kube_node_status_allocatable{resource="cpu", %(kubeStateMetricsSelector)s}) - max(kube_node_status_allocatable{resource="cpu", %(kubeStateMetricsSelector)s})) > 0
               and
               (sum(kube_node_status_allocatable{resource="cpu", %(kubeStateMetricsSelector)s}) - max(kube_node_status_allocatable{resource="cpu", %(kubeStateMetricsSelector)s})) > 0
             ||| % $._config,
@@ -73,7 +73,7 @@ local utils = import '../lib/utils.libsonnet';
           } +
           if $._config.showMultiCluster then {
             expr: |||
-              sum(namespace_memory:kube_pod_container_resource_requests:sum{%(ignoringOverprovisionedWorkloadSelector)s}) by (%(clusterLabel)s) - (sum(kube_node_status_allocatable{resource="memory", %(kubeStateMetricsSelector)s}) by (%(clusterLabel)s) - max(kube_node_status_allocatable{resource="memory", %(kubeStateMetricsSelector)s}) by (%(clusterLabel)s)) > 0
+              sum((sum by (namespace, %(clusterLabel)s) ( sum by (namespace, pod, %(clusterLabel)s) ( max by (namespace, pod, container, %(clusterLabel)s) ( kube_pod_container_resource_requests{resource="memory",%(kubeStateMetricsSelector)s} ) * on(namespace, pod, %(clusterLabel)s) group_left() max by (namespace, pod, %(clusterLabel)s) ( kube_pod_status_phase{phase=~"Pending|Running"} == 1 ) ) )){%(ignoringOverprovisionedWorkloadSelector)s}) by (%(clusterLabel)s) - (sum(kube_node_status_allocatable{resource="memory", %(kubeStateMetricsSelector)s}) by (%(clusterLabel)s) - max(kube_node_status_allocatable{resource="memory", %(kubeStateMetricsSelector)s}) by (%(clusterLabel)s)) > 0
               and
               (sum(kube_node_status_allocatable{resource="memory", %(kubeStateMetricsSelector)s}) by (%(clusterLabel)s) - max(kube_node_status_allocatable{resource="memory", %(kubeStateMetricsSelector)s}) by (%(clusterLabel)s)) > 0
             ||| % $._config,
@@ -83,7 +83,7 @@ local utils = import '../lib/utils.libsonnet';
           } else
             {
               expr: |||
-                sum(namespace_memory:kube_pod_container_resource_requests:sum{%(ignoringOverprovisionedWorkloadSelector)s}) - (sum(kube_node_status_allocatable{resource="memory", %(kubeStateMetricsSelector)s}) - max(kube_node_status_allocatable{resource="memory", %(kubeStateMetricsSelector)s})) > 0
+                sum((sum by (namespace, %(clusterLabel)s) ( sum by (namespace, pod, %(clusterLabel)s) ( max by (namespace, pod, container, %(clusterLabel)s) ( kube_pod_container_resource_requests{resource="memory",%(kubeStateMetricsSelector)s} ) * on(namespace, pod, %(clusterLabel)s) group_left() max by (namespace, pod, %(clusterLabel)s) ( kube_pod_status_phase{phase=~"Pending|Running"} == 1 ) ) )){%(ignoringOverprovisionedWorkloadSelector)s}) - (sum(kube_node_status_allocatable{resource="memory", %(kubeStateMetricsSelector)s}) - max(kube_node_status_allocatable{resource="memory", %(kubeStateMetricsSelector)s})) > 0
                 and
                 (sum(kube_node_status_allocatable{resource="memory", %(kubeStateMetricsSelector)s}) - max(kube_node_status_allocatable{resource="memory", %(kubeStateMetricsSelector)s})) > 0
               ||| % $._config,

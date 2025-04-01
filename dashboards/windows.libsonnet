@@ -79,7 +79,7 @@ local var = g.dashboard.variable;
       + var.query.withDatasourceFromVariable(self.datasource)
       + var.query.queryTypes.withLabelValues(
         'namespace',
-        'windows_pod_container_available{%(clusterLabel)s="$cluster"}' % $._config,
+        '(windows_container_available{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)){%(clusterLabel)s="$cluster"}' % $._config,
       )
       + var.query.generalOptions.withLabel('namespace')
       + var.query.refresh.onTime()
@@ -91,7 +91,7 @@ local var = g.dashboard.variable;
       + var.query.withDatasourceFromVariable(self.datasource)
       + var.query.queryTypes.withLabelValues(
         'pod',
-        'windows_pod_container_available{%(clusterLabel)s="$cluster",namespace="$namespace"}' % $._config,
+        '(windows_container_available{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)){%(clusterLabel)s="$cluster",namespace="$namespace"}' % $._config,
       )
       + var.query.generalOptions.withLabel('pod')
       + var.query.refresh.onTime()
@@ -131,7 +131,7 @@ local var = g.dashboard.variable;
         statPanel(
           'CPU Requests Commitment',
           'percentunit',
-          'sum(kube_pod_windows_container_resource_cpu_cores_request{%(clusterLabel)s="$cluster"}) / sum(node:windows_node_num_cpu:sum{%(clusterLabel)s="$cluster"})' % $._config
+          'sum((max by (%(clusterLabel)s, namespace, pod, container) ( kube_pod_container_resource_requests{resource="cpu",%(kubeStateMetricsSelector)s} ) * on(container,pod,namespace,%(clusterLabel)s) ((windows_container_available{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)))){%(clusterLabel)s="$cluster"}) / sum((count by (%(clusterLabel)s, instance) (sum by (%(clusterLabel)s, instance, core) ( windows_cpu_time_total{%(windowsExporterSelector)s} ))){%(clusterLabel)s="$cluster"})' % $._config
         )
         + stat.gridPos.withW(4)
         + stat.gridPos.withH(3),
@@ -139,7 +139,7 @@ local var = g.dashboard.variable;
         statPanel(
           'CPU Limits Commitment',
           'percentunit',
-          'sum(kube_pod_windows_container_resource_cpu_cores_limit{%(clusterLabel)s="$cluster"}) / sum(node:windows_node_num_cpu:sum{%(clusterLabel)s="$cluster"})' % $._config
+          'sum((kube_pod_container_resource_limits{resource="cpu",%(kubeStateMetricsSelector)s} * on(container,pod,namespace,%(clusterLabel)s) ((windows_container_available{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)))){%(clusterLabel)s="$cluster"}) / sum((count by (%(clusterLabel)s, instance) (sum by (%(clusterLabel)s, instance, core) ( windows_cpu_time_total{%(windowsExporterSelector)s} ))){%(clusterLabel)s="$cluster"})' % $._config
         )
         + stat.gridPos.withW(4)
         + stat.gridPos.withH(3),
@@ -147,7 +147,7 @@ local var = g.dashboard.variable;
         statPanel(
           'Memory Utilisation',
           'percentunit',
-          '1 - sum(:windows_node_memory_MemFreeCached_bytes:sum{%(clusterLabel)s="$cluster"}) / sum(:windows_node_memory_MemTotal_bytes:sum{%(clusterLabel)s="$cluster"})' % $._config
+          '1 - sum((sum by (%(clusterLabel)s) (windows_memory_available_bytes{%(windowsExporterSelector)s} + windows_memory_cache_bytes{%(windowsExporterSelector)s})){%(clusterLabel)s="$cluster"}) / sum((sum by (%(clusterLabel)s) (windows_os_visible_memory_bytes{%(windowsExporterSelector)s})){%(clusterLabel)s="$cluster"})' % $._config
         )
         + stat.gridPos.withW(4)
         + stat.gridPos.withH(3),
@@ -155,7 +155,7 @@ local var = g.dashboard.variable;
         statPanel(
           'Memory Requests Commitment',
           'percentunit',
-          'sum(kube_pod_windows_container_resource_memory_request{%(clusterLabel)s="$cluster"}) / sum(:windows_node_memory_MemTotal_bytes:sum{%(clusterLabel)s="$cluster"})' % $._config
+          'sum((max by (%(clusterLabel)s, namespace, pod, container) ( kube_pod_container_resource_requests{resource="memory",%(kubeStateMetricsSelector)s} ) * on(container,pod,namespace,%(clusterLabel)s) ((windows_container_available{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)))){%(clusterLabel)s="$cluster"}) / sum((sum by (%(clusterLabel)s) (windows_os_visible_memory_bytes{%(windowsExporterSelector)s})){%(clusterLabel)s="$cluster"})' % $._config
         )
         + stat.gridPos.withW(4)
         + stat.gridPos.withH(3),
@@ -163,7 +163,7 @@ local var = g.dashboard.variable;
         statPanel(
           'Memory Limits Commitment',
           'percentunit',
-          'sum(kube_pod_windows_container_resource_memory_limit{%(clusterLabel)s="$cluster"}) / sum(:windows_node_memory_MemTotal_bytes:sum{%(clusterLabel)s="$cluster"})' % $._config
+          'sum((kube_pod_container_resource_limits{resource="memory",%(kubeStateMetricsSelector)s} * on(container,pod,namespace,%(clusterLabel)s) ((windows_container_available{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)))){%(clusterLabel)s="$cluster"}) / sum((sum by (%(clusterLabel)s) (windows_os_visible_memory_bytes{%(windowsExporterSelector)s})){%(clusterLabel)s="$cluster"})' % $._config
         )
         + stat.gridPos.withW(4)
         + stat.gridPos.withH(3),
@@ -172,30 +172,30 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'sum(namespace_pod_container:windows_container_cpu_usage_seconds_total:sum_rate{%(clusterLabel)s="$cluster"}) by (namespace)' % $._config
+            'sum((sum by (%(clusterLabel)s, namespace, pod, container) ( rate((windows_container_cpu_usage_seconds_total{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)){}[5m]) )){%(clusterLabel)s="$cluster"}) by (namespace)' % $._config
           )
           + prometheus.withLegendFormat('__auto'),
         ]),
 
         table.new('CPU Quota')
         + table.queryOptions.withTargets([
-          prometheus.new('${datasource}', 'sum(namespace_pod_container:windows_container_cpu_usage_seconds_total:sum_rate{%(clusterLabel)s="$cluster"}) by (namespace)' % $._config)
+          prometheus.new('${datasource}', 'sum((sum by (%(clusterLabel)s, namespace, pod, container) ( rate((windows_container_cpu_usage_seconds_total{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)){}[5m]) )){%(clusterLabel)s="$cluster"}) by (namespace)' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
-          prometheus.new('${datasource}', 'sum(kube_pod_windows_container_resource_cpu_cores_request{%(clusterLabel)s="$cluster"}) by (namespace)' % $._config)
+          prometheus.new('${datasource}', 'sum((max by (%(clusterLabel)s, namespace, pod, container) ( kube_pod_container_resource_requests{resource="cpu",%(kubeStateMetricsSelector)s} ) * on(container,pod,namespace,%(clusterLabel)s) ((windows_container_available{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)))){%(clusterLabel)s="$cluster"}) by (namespace)' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
-          prometheus.new('${datasource}', 'sum(namespace_pod_container:windows_container_cpu_usage_seconds_total:sum_rate{%(clusterLabel)s="$cluster"}) by (namespace) / sum(kube_pod_windows_container_resource_cpu_cores_request{%(clusterLabel)s="$cluster"}) by (namespace)' % $._config)
+          prometheus.new('${datasource}', 'sum((sum by (%(clusterLabel)s, namespace, pod, container) ( rate((windows_container_cpu_usage_seconds_total{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)){}[5m]) )){%(clusterLabel)s="$cluster"}) by (namespace) / sum((max by (%(clusterLabel)s, namespace, pod, container) ( kube_pod_container_resource_requests{resource="cpu",%(kubeStateMetricsSelector)s} ) * on(container,pod,namespace,%(clusterLabel)s) ((windows_container_available{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)))){%(clusterLabel)s="$cluster"}) by (namespace)' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
-          prometheus.new('${datasource}', 'sum(kube_pod_windows_container_resource_cpu_cores_limit{%(clusterLabel)s="$cluster"}) by (namespace)' % $._config)
+          prometheus.new('${datasource}', 'sum((kube_pod_container_resource_limits{resource="cpu",%(kubeStateMetricsSelector)s} * on(container,pod,namespace,%(clusterLabel)s) ((windows_container_available{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)))){%(clusterLabel)s="$cluster"}) by (namespace)' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
-          prometheus.new('${datasource}', 'sum(namespace_pod_container:windows_container_cpu_usage_seconds_total:sum_rate{%(clusterLabel)s="$cluster"}) by (namespace) / sum(kube_pod_windows_container_resource_cpu_cores_limit{%(clusterLabel)s="$cluster"}) by (namespace)' % $._config)
+          prometheus.new('${datasource}', 'sum((sum by (%(clusterLabel)s, namespace, pod, container) ( rate((windows_container_cpu_usage_seconds_total{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)){}[5m]) )){%(clusterLabel)s="$cluster"}) by (namespace) / sum((kube_pod_container_resource_limits{resource="cpu",%(kubeStateMetricsSelector)s} * on(container,pod,namespace,%(clusterLabel)s) ((windows_container_available{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)))){%(clusterLabel)s="$cluster"}) by (namespace)' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
         ])
@@ -273,7 +273,7 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'sum(windows_container_private_working_set_usage{%(clusterLabel)s="$cluster"}) by (namespace)' % $._config
+            'sum((((windows_container_memory_usage_commit_bytes{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s))_commit_bytes{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s))_private_working_set_bytes{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)){%(clusterLabel)s="$cluster"}) by (namespace)' % $._config
           )
           + prometheus.withLegendFormat('__auto'),
         ]),
@@ -281,23 +281,23 @@ local var = g.dashboard.variable;
         table.new('Memory Requests by Namespace')
         + table.standardOptions.withUnit('bytes')
         + table.queryOptions.withTargets([
-          prometheus.new('${datasource}', 'sum(windows_container_private_working_set_usage{%(clusterLabel)s="$cluster"}) by (namespace)' % $._config)
+          prometheus.new('${datasource}', 'sum((((windows_container_memory_usage_commit_bytes{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s))_commit_bytes{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s))_private_working_set_bytes{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)){%(clusterLabel)s="$cluster"}) by (namespace)' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
-          prometheus.new('${datasource}', 'sum(kube_pod_windows_container_resource_memory_request{%(clusterLabel)s="$cluster"}) by (namespace)' % $._config)
+          prometheus.new('${datasource}', 'sum((max by (%(clusterLabel)s, namespace, pod, container) ( kube_pod_container_resource_requests{resource="memory",%(kubeStateMetricsSelector)s} ) * on(container,pod,namespace,%(clusterLabel)s) ((windows_container_available{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)))){%(clusterLabel)s="$cluster"}) by (namespace)' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
-          prometheus.new('${datasource}', 'sum(windows_container_private_working_set_usage{%(clusterLabel)s="$cluster"}) by (namespace) / sum(kube_pod_windows_container_resource_memory_request{%(clusterLabel)s="$cluster"}) by (namespace)' % $._config)
+          prometheus.new('${datasource}', 'sum((((windows_container_memory_usage_commit_bytes{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s))_commit_bytes{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s))_private_working_set_bytes{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)){%(clusterLabel)s="$cluster"}) by (namespace) / sum((max by (%(clusterLabel)s, namespace, pod, container) ( kube_pod_container_resource_requests{resource="memory",%(kubeStateMetricsSelector)s} ) * on(container,pod,namespace,%(clusterLabel)s) ((windows_container_available{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)))){%(clusterLabel)s="$cluster"}) by (namespace)' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
-          prometheus.new('${datasource}', 'sum(kube_pod_windows_container_resource_memory_limit{%(clusterLabel)s="$cluster"}) by (namespace)' % $._config)
+          prometheus.new('${datasource}', 'sum((kube_pod_container_resource_limits{resource="memory",%(kubeStateMetricsSelector)s} * on(container,pod,namespace,%(clusterLabel)s) ((windows_container_available{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)))){%(clusterLabel)s="$cluster"}) by (namespace)' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
-          prometheus.new('${datasource}', 'sum(windows_container_private_working_set_usage{%(clusterLabel)s="$cluster"}) by (namespace) / sum(kube_pod_windows_container_resource_memory_limit{%(clusterLabel)s="$cluster"}) by (namespace)' % $._config)
+          prometheus.new('${datasource}', 'sum((((windows_container_memory_usage_commit_bytes{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s))_commit_bytes{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s))_private_working_set_bytes{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)){%(clusterLabel)s="$cluster"}) by (namespace) / sum((kube_pod_container_resource_limits{resource="memory",%(kubeStateMetricsSelector)s} * on(container,pod,namespace,%(clusterLabel)s) ((windows_container_available{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)))){%(clusterLabel)s="$cluster"}) by (namespace)' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
         ])
@@ -423,30 +423,30 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'sum(namespace_pod_container:windows_container_cpu_usage_seconds_total:sum_rate{%(clusterLabel)s="$cluster", namespace="$namespace"}) by (pod)' % $._config
+            'sum((sum by (%(clusterLabel)s, namespace, pod, container) ( rate((windows_container_cpu_usage_seconds_total{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)){}[5m]) )){%(clusterLabel)s="$cluster", namespace="$namespace"}) by (pod)' % $._config
           )
           + prometheus.withLegendFormat('__auto'),
         ]),
 
         table.new('CPU Quota')
         + table.queryOptions.withTargets([
-          prometheus.new('${datasource}', 'sum(namespace_pod_container:windows_container_cpu_usage_seconds_total:sum_rate{%(clusterLabel)s="$cluster", namespace="$namespace"}) by (pod)' % $._config)
+          prometheus.new('${datasource}', 'sum((sum by (%(clusterLabel)s, namespace, pod, container) ( rate((windows_container_cpu_usage_seconds_total{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)){}[5m]) )){%(clusterLabel)s="$cluster", namespace="$namespace"}) by (pod)' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
-          prometheus.new('${datasource}', 'sum(kube_pod_windows_container_resource_cpu_cores_request{%(clusterLabel)s="$cluster", namespace="$namespace"}) by (pod)' % $._config)
+          prometheus.new('${datasource}', 'sum((max by (%(clusterLabel)s, namespace, pod, container) ( kube_pod_container_resource_requests{resource="cpu",%(kubeStateMetricsSelector)s} ) * on(container,pod,namespace,%(clusterLabel)s) ((windows_container_available{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)))){%(clusterLabel)s="$cluster", namespace="$namespace"}) by (pod)' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
-          prometheus.new('${datasource}', 'sum(namespace_pod_container:windows_container_cpu_usage_seconds_total:sum_rate{%(clusterLabel)s="$cluster", namespace="$namespace"}) by (pod) / sum(kube_pod_windows_container_resource_cpu_cores_request{%(clusterLabel)s="$cluster", namespace="$namespace"}) by (pod)' % $._config)
+          prometheus.new('${datasource}', 'sum((sum by (%(clusterLabel)s, namespace, pod, container) ( rate((windows_container_cpu_usage_seconds_total{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)){}[5m]) )){%(clusterLabel)s="$cluster", namespace="$namespace"}) by (pod) / sum((max by (%(clusterLabel)s, namespace, pod, container) ( kube_pod_container_resource_requests{resource="cpu",%(kubeStateMetricsSelector)s} ) * on(container,pod,namespace,%(clusterLabel)s) ((windows_container_available{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)))){%(clusterLabel)s="$cluster", namespace="$namespace"}) by (pod)' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
-          prometheus.new('${datasource}', 'sum(kube_pod_windows_container_resource_cpu_cores_limit{%(clusterLabel)s="$cluster", namespace="$namespace"}) by (pod)' % $._config)
+          prometheus.new('${datasource}', 'sum((kube_pod_container_resource_limits{resource="cpu",%(kubeStateMetricsSelector)s} * on(container,pod,namespace,%(clusterLabel)s) ((windows_container_available{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)))){%(clusterLabel)s="$cluster", namespace="$namespace"}) by (pod)' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
-          prometheus.new('${datasource}', 'sum(namespace_pod_container:windows_container_cpu_usage_seconds_total:sum_rate{%(clusterLabel)s="$cluster", namespace="$namespace"}) by (pod) / sum(kube_pod_windows_container_resource_cpu_cores_limit{%(clusterLabel)s="$cluster", namespace="$namespace"}) by (pod)' % $._config)
+          prometheus.new('${datasource}', 'sum((sum by (%(clusterLabel)s, namespace, pod, container) ( rate((windows_container_cpu_usage_seconds_total{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)){}[5m]) )){%(clusterLabel)s="$cluster", namespace="$namespace"}) by (pod) / sum((kube_pod_container_resource_limits{resource="cpu",%(kubeStateMetricsSelector)s} * on(container,pod,namespace,%(clusterLabel)s) ((windows_container_available{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)))){%(clusterLabel)s="$cluster", namespace="$namespace"}) by (pod)' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
         ])
@@ -524,7 +524,7 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'sum(windows_container_private_working_set_usage{%(clusterLabel)s="$cluster", namespace="$namespace"}) by (pod)' % $._config
+            'sum((((windows_container_memory_usage_commit_bytes{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s))_commit_bytes{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s))_private_working_set_bytes{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)){%(clusterLabel)s="$cluster", namespace="$namespace"}) by (pod)' % $._config
           )
           + prometheus.withLegendFormat('__auto'),
         ]),
@@ -532,23 +532,23 @@ local var = g.dashboard.variable;
         table.new('Memory Quota')
         + table.standardOptions.withUnit('bytes')
         + table.queryOptions.withTargets([
-          prometheus.new('${datasource}', 'sum(windows_container_private_working_set_usage{%(clusterLabel)s="$cluster", namespace="$namespace"}) by (pod)' % $._config)
+          prometheus.new('${datasource}', 'sum((((windows_container_memory_usage_commit_bytes{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s))_commit_bytes{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s))_private_working_set_bytes{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)){%(clusterLabel)s="$cluster", namespace="$namespace"}) by (pod)' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
-          prometheus.new('${datasource}', 'sum(kube_pod_windows_container_resource_memory_request{%(clusterLabel)s="$cluster", namespace="$namespace"}) by (pod)' % $._config)
+          prometheus.new('${datasource}', 'sum((max by (%(clusterLabel)s, namespace, pod, container) ( kube_pod_container_resource_requests{resource="memory",%(kubeStateMetricsSelector)s} ) * on(container,pod,namespace,%(clusterLabel)s) ((windows_container_available{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)))){%(clusterLabel)s="$cluster", namespace="$namespace"}) by (pod)' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
-          prometheus.new('${datasource}', 'sum(windows_container_private_working_set_usage{%(clusterLabel)s="$cluster", namespace="$namespace"}) by (pod) / sum(kube_pod_windows_container_resource_memory_request{%(clusterLabel)s="$cluster", namespace="$namespace"}) by (pod)' % $._config)
+          prometheus.new('${datasource}', 'sum((((windows_container_memory_usage_commit_bytes{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s))_commit_bytes{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s))_private_working_set_bytes{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)){%(clusterLabel)s="$cluster", namespace="$namespace"}) by (pod) / sum((max by (%(clusterLabel)s, namespace, pod, container) ( kube_pod_container_resource_requests{resource="memory",%(kubeStateMetricsSelector)s} ) * on(container,pod,namespace,%(clusterLabel)s) ((windows_container_available{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)))){%(clusterLabel)s="$cluster", namespace="$namespace"}) by (pod)' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
-          prometheus.new('${datasource}', 'sum(kube_pod_windows_container_resource_memory_limit{%(clusterLabel)s="$cluster", namespace="$namespace"}) by (pod)' % $._config)
+          prometheus.new('${datasource}', 'sum((kube_pod_container_resource_limits{resource="memory",%(kubeStateMetricsSelector)s} * on(container,pod,namespace,%(clusterLabel)s) ((windows_container_available{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)))){%(clusterLabel)s="$cluster", namespace="$namespace"}) by (pod)' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
-          prometheus.new('${datasource}', 'sum(windows_container_private_working_set_usage{%(clusterLabel)s="$cluster", namespace="$namespace"}) by (pod) / sum(kube_pod_windows_container_resource_memory_limit{%(clusterLabel)s="$cluster", namespace="$namespace"}) by (pod)' % $._config)
+          prometheus.new('${datasource}', 'sum((((windows_container_memory_usage_commit_bytes{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s))_commit_bytes{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s))_private_working_set_bytes{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)){%(clusterLabel)s="$cluster", namespace="$namespace"}) by (pod) / sum((kube_pod_container_resource_limits{resource="memory",%(kubeStateMetricsSelector)s} * on(container,pod,namespace,%(clusterLabel)s) ((windows_container_available{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)))){%(clusterLabel)s="$cluster", namespace="$namespace"}) by (pod)' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
         ])
@@ -638,30 +638,30 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'sum(namespace_pod_container:windows_container_cpu_usage_seconds_total:sum_rate{%(clusterLabel)s="$cluster", namespace="$namespace", pod="$pod"}) by (container)' % $._config
+            'sum((sum by (%(clusterLabel)s, namespace, pod, container) ( rate((windows_container_cpu_usage_seconds_total{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)){}[5m]) )){%(clusterLabel)s="$cluster", namespace="$namespace", pod="$pod"}) by (container)' % $._config
           )
           + prometheus.withLegendFormat('__auto'),
         ]),
 
         table.new('CPU Quota')
         + table.queryOptions.withTargets([
-          prometheus.new('${datasource}', 'sum(namespace_pod_container:windows_container_cpu_usage_seconds_total:sum_rate{%(clusterLabel)s="$cluster", namespace="$namespace", pod="$pod"}) by (container)' % $._config)
+          prometheus.new('${datasource}', 'sum((sum by (%(clusterLabel)s, namespace, pod, container) ( rate((windows_container_cpu_usage_seconds_total{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)){}[5m]) )){%(clusterLabel)s="$cluster", namespace="$namespace", pod="$pod"}) by (container)' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
-          prometheus.new('${datasource}', 'sum(kube_pod_windows_container_resource_cpu_cores_request{%(clusterLabel)s="$cluster", namespace="$namespace", pod="$pod"}) by (container)' % $._config)
+          prometheus.new('${datasource}', 'sum((max by (%(clusterLabel)s, namespace, pod, container) ( kube_pod_container_resource_requests{resource="cpu",%(kubeStateMetricsSelector)s} ) * on(container,pod,namespace,%(clusterLabel)s) ((windows_container_available{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)))){%(clusterLabel)s="$cluster", namespace="$namespace", pod="$pod"}) by (container)' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
-          prometheus.new('${datasource}', 'sum(namespace_pod_container:windows_container_cpu_usage_seconds_total:sum_rate{%(clusterLabel)s="$cluster", namespace="$namespace", pod="$pod"}) by (container) / sum(kube_pod_windows_container_resource_cpu_cores_request{%(clusterLabel)s="$cluster", namespace="$namespace", pod="$pod"}) by (container)' % $._config)
+          prometheus.new('${datasource}', 'sum((sum by (%(clusterLabel)s, namespace, pod, container) ( rate((windows_container_cpu_usage_seconds_total{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)){}[5m]) )){%(clusterLabel)s="$cluster", namespace="$namespace", pod="$pod"}) by (container) / sum((max by (%(clusterLabel)s, namespace, pod, container) ( kube_pod_container_resource_requests{resource="cpu",%(kubeStateMetricsSelector)s} ) * on(container,pod,namespace,%(clusterLabel)s) ((windows_container_available{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)))){%(clusterLabel)s="$cluster", namespace="$namespace", pod="$pod"}) by (container)' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
-          prometheus.new('${datasource}', 'sum(kube_pod_windows_container_resource_cpu_cores_limit{%(clusterLabel)s="$cluster", namespace="$namespace", pod="$pod"}) by (container)' % $._config)
+          prometheus.new('${datasource}', 'sum((kube_pod_container_resource_limits{resource="cpu",%(kubeStateMetricsSelector)s} * on(container,pod,namespace,%(clusterLabel)s) ((windows_container_available{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)))){%(clusterLabel)s="$cluster", namespace="$namespace", pod="$pod"}) by (container)' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
-          prometheus.new('${datasource}', 'sum(namespace_pod_container:windows_container_cpu_usage_seconds_total:sum_rate{%(clusterLabel)s="$cluster", namespace="$namespace", pod="$pod"}) by (container) / sum(kube_pod_windows_container_resource_cpu_cores_limit{%(clusterLabel)s="$cluster", namespace="$namespace", pod="$pod"}) by (container)' % $._config)
+          prometheus.new('${datasource}', 'sum((sum by (%(clusterLabel)s, namespace, pod, container) ( rate((windows_container_cpu_usage_seconds_total{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)){}[5m]) )){%(clusterLabel)s="$cluster", namespace="$namespace", pod="$pod"}) by (container) / sum((kube_pod_container_resource_limits{resource="cpu",%(kubeStateMetricsSelector)s} * on(container,pod,namespace,%(clusterLabel)s) ((windows_container_available{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)))){%(clusterLabel)s="$cluster", namespace="$namespace", pod="$pod"}) by (container)' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
         ])
@@ -739,7 +739,7 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'sum(windows_container_private_working_set_usage{%(clusterLabel)s="$cluster", namespace="$namespace", pod="$pod"}) by (container)' % $._config
+            'sum((((windows_container_memory_usage_commit_bytes{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s))_commit_bytes{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s))_private_working_set_bytes{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)){%(clusterLabel)s="$cluster", namespace="$namespace", pod="$pod"}) by (container)' % $._config
           )
           + prometheus.withLegendFormat('__auto'),
         ]),
@@ -747,23 +747,23 @@ local var = g.dashboard.variable;
         table.new('Memory Quota')
         + table.standardOptions.withUnit('bytes')
         + table.queryOptions.withTargets([
-          prometheus.new('${datasource}', 'sum(windows_container_private_working_set_usage{%(clusterLabel)s="$cluster", namespace="$namespace", pod="$pod"}) by (container)' % $._config)
+          prometheus.new('${datasource}', 'sum((((windows_container_memory_usage_commit_bytes{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s))_commit_bytes{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s))_private_working_set_bytes{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)){%(clusterLabel)s="$cluster", namespace="$namespace", pod="$pod"}) by (container)' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
-          prometheus.new('${datasource}', 'sum(kube_pod_windows_container_resource_memory_request{%(clusterLabel)s="$cluster", namespace="$namespace", pod="$pod"}) by (container)' % $._config)
+          prometheus.new('${datasource}', 'sum((max by (%(clusterLabel)s, namespace, pod, container) ( kube_pod_container_resource_requests{resource="memory",%(kubeStateMetricsSelector)s} ) * on(container,pod,namespace,%(clusterLabel)s) ((windows_container_available{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)))){%(clusterLabel)s="$cluster", namespace="$namespace", pod="$pod"}) by (container)' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
-          prometheus.new('${datasource}', 'sum(windows_container_private_working_set_usage{%(clusterLabel)s="$cluster", namespace="$namespace", pod="$pod"}) by (container) / sum(kube_pod_windows_container_resource_memory_request{%(clusterLabel)s="$cluster", namespace="$namespace", pod="$pod"}) by (container)' % $._config)
+          prometheus.new('${datasource}', 'sum((((windows_container_memory_usage_commit_bytes{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s))_commit_bytes{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s))_private_working_set_bytes{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)){%(clusterLabel)s="$cluster", namespace="$namespace", pod="$pod"}) by (container) / sum((max by (%(clusterLabel)s, namespace, pod, container) ( kube_pod_container_resource_requests{resource="memory",%(kubeStateMetricsSelector)s} ) * on(container,pod,namespace,%(clusterLabel)s) ((windows_container_available{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)))){%(clusterLabel)s="$cluster", namespace="$namespace", pod="$pod"}) by (container)' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
-          prometheus.new('${datasource}', 'sum(kube_pod_windows_container_resource_memory_limit{%(clusterLabel)s="$cluster", namespace="$namespace", pod="$pod"}) by (container)' % $._config)
+          prometheus.new('${datasource}', 'sum((kube_pod_container_resource_limits{resource="memory",%(kubeStateMetricsSelector)s} * on(container,pod,namespace,%(clusterLabel)s) ((windows_container_available{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)))){%(clusterLabel)s="$cluster", namespace="$namespace", pod="$pod"}) by (container)' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
-          prometheus.new('${datasource}', 'sum(windows_container_private_working_set_usage{%(clusterLabel)s="$cluster", namespace="$namespace", pod="$pod"}) by (container) / sum(kube_pod_windows_container_resource_memory_limit{%(clusterLabel)s="$cluster", namespace="$namespace", pod="$pod"}) by (container)' % $._config)
+          prometheus.new('${datasource}', 'sum((((windows_container_memory_usage_commit_bytes{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s))_commit_bytes{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s))_private_working_set_bytes{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)){%(clusterLabel)s="$cluster", namespace="$namespace", pod="$pod"}) by (container) / sum((kube_pod_container_resource_limits{resource="memory",%(kubeStateMetricsSelector)s} * on(container,pod,namespace,%(clusterLabel)s) ((windows_container_available{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)))){%(clusterLabel)s="$cluster", namespace="$namespace", pod="$pod"}) by (container)' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
         ])
@@ -829,13 +829,13 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'sort_desc(sum by (container) (rate(windows_container_network_received_bytes_total{%(clusterLabel)s="$cluster", namespace="$namespace", pod="$pod"}[%(grafanaIntervalVar)s])))' % $._config
+            'sort_desc(sum by (container) (rate((windows_container_network_receive_bytes_total{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)){%(clusterLabel)s="$cluster", namespace="$namespace", pod="$pod"}[%(grafanaIntervalVar)s])))' % $._config
           )
           + prometheus.withLegendFormat('Received : {{ container }}'),
 
           prometheus.new(
             '${datasource}',
-            'sort_desc(sum by (container) (rate(windows_container_network_transmitted_bytes_total{%(clusterLabel)s="$cluster", namespace="$namespace", pod="$pod"}[%(grafanaIntervalVar)s])))' % $._config
+            'sort_desc(sum by (container) (rate((windows_container_network_transmit_bytes_total{%(windowsExporterSelector)s, container_id != ""} * on(container_id, %(clusterLabel)s) group_left(container, pod, namespace) max(kube_pod_container_info{%(kubeStateMetricsSelector)s, container_id != ""}) by(container, container_id, pod, namespace, %(clusterLabel)s)){%(clusterLabel)s="$cluster", namespace="$namespace", pod="$pod"}[%(grafanaIntervalVar)s])))' % $._config
           )
           + prometheus.withLegendFormat('Transmitted : {{ container }}'),
         ]),
@@ -859,7 +859,7 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'node:windows_node_cpu_utilisation:avg1m{%(clusterLabel)s="$cluster"} * node:windows_node_num_cpu:sum{%(clusterLabel)s="$cluster"} / scalar(sum(node:windows_node_num_cpu:sum{%(clusterLabel)s="$cluster"}))' % $._config
+            '(1 - avg by (%(clusterLabel)s, instance) ( rate(windows_cpu_time_total{%(windowsExporterSelector)s,mode="idle"}[1m]) )){%(clusterLabel)s="$cluster"} * (count by (%(clusterLabel)s, instance) (sum by (%(clusterLabel)s, instance, core) ( windows_cpu_time_total{%(windowsExporterSelector)s} ))){%(clusterLabel)s="$cluster"} / scalar(sum((count by (%(clusterLabel)s, instance) (sum by (%(clusterLabel)s, instance, core) ( windows_cpu_time_total{%(windowsExporterSelector)s} ))){%(clusterLabel)s="$cluster"}))' % $._config
           )
           + prometheus.withLegendFormat('{{instance}}'),
         ]),
@@ -869,7 +869,7 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'node:windows_node_memory_utilisation:ratio{%(clusterLabel)s="$cluster"}' % $._config
+            '(((sum by (%(clusterLabel)s, instance) ( windows_os_visible_memory_bytes{%(windowsExporterSelector)s} )) - (sum by (%(clusterLabel)s, instance) ( (windows_memory_available_bytes{%(windowsExporterSelector)s}) ))) / scalar(sum((sum by (%(clusterLabel)s, instance) ( windows_os_visible_memory_bytes{%(windowsExporterSelector)s} ))))){%(clusterLabel)s="$cluster"}' % $._config
           )
           + prometheus.withLegendFormat('{{instance}}'),
         ]),
@@ -879,7 +879,7 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'node:windows_node_memory_swap_io_pages:irate{%(clusterLabel)s="$cluster"}' % $._config
+            '(irate(windows_memory_swap_page_operations_total{%(windowsExporterSelector)s}[5m])){%(clusterLabel)s="$cluster"}' % $._config
           )
           + prometheus.withLegendFormat('{{instance}}'),
         ]),
@@ -890,7 +890,7 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'node:windows_node_disk_utilisation:avg_irate{%(clusterLabel)s="$cluster"} / scalar(node:windows_node:sum{%(clusterLabel)s="$cluster"})' % $._config
+            '(avg by (%(clusterLabel)s, instance) ( (irate(windows_logical_disk_read_seconds_total{%(windowsExporterSelector)s}[1m]) + irate(windows_logical_disk_write_seconds_total{%(windowsExporterSelector)s}[1m])) )){%(clusterLabel)s="$cluster"} / scalar((count by (%(clusterLabel)s) ( windows_system_system_up_time{%(windowsExporterSelector)s} )){%(clusterLabel)s="$cluster"})' % $._config
           )
           + prometheus.withLegendFormat('{{instance}}'),
         ]),
@@ -900,7 +900,7 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'node:windows_node_net_utilisation:sum_irate{%(clusterLabel)s="$cluster"}' % $._config
+            '(sum by (%(clusterLabel)s, instance) ( (irate(windows_net_bytes_total{%(windowsExporterSelector)s}[1m])) )){%(clusterLabel)s="$cluster"}' % $._config
           )
           + prometheus.withLegendFormat('{{instance}}'),
         ]),
@@ -910,7 +910,7 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'node:windows_node_net_saturation:sum_irate{%(clusterLabel)s="$cluster"}' % $._config
+            '(sum by (%(clusterLabel)s, instance) ( (irate(windows_net_packets_received_discarded_total{%(windowsExporterSelector)s}[1m]) + irate(windows_net_packets_outbound_discarded_total{%(windowsExporterSelector)s}[1m])) )){%(clusterLabel)s="$cluster"}' % $._config
           )
           + prometheus.withLegendFormat('{{instance}}'),
         ]),
@@ -921,7 +921,7 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'sum by (instance)(node:windows_node_filesystem_usage:{%(clusterLabel)s="$cluster"})' % $._config
+            'sum by (instance)((max by (%(clusterLabel)s,instance,volume)( (windows_logical_disk_size_bytes{%(windowsExporterSelector)s} - windows_logical_disk_free_bytes{%(windowsExporterSelector)s}) / windows_logical_disk_size_bytes{%(windowsExporterSelector)s} )){%(clusterLabel)s="$cluster"})' % $._config
           )
           + prometheus.withLegendFormat('{{instance}}'),
         ]),
@@ -944,7 +944,7 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'node:windows_node_cpu_utilisation:avg1m{%(clusterLabel)s="$cluster", instance="$instance"}' % $._config
+            '(1 - avg by (%(clusterLabel)s, instance) ( rate(windows_cpu_time_total{%(windowsExporterSelector)s,mode="idle"}[1m]) )){%(clusterLabel)s="$cluster", instance="$instance"}' % $._config
           )
           + prometheus.withLegendFormat('Utilisation'),
         ]),
@@ -965,7 +965,7 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'node:windows_node_memory_utilisation:{%(clusterLabel)s="$cluster", instance="$instance"}' % $._config
+            '(1 - ((sum by (%(clusterLabel)s, instance) ( (windows_memory_available_bytes{%(windowsExporterSelector)s}) )) / (sum by (%(clusterLabel)s, instance) ( windows_os_visible_memory_bytes{%(windowsExporterSelector)s} )))){%(clusterLabel)s="$cluster", instance="$instance"}' % $._config
           )
           + prometheus.withLegendFormat('Memory'),
         ]),
@@ -987,7 +987,7 @@ local var = g.dashboard.variable;
 
           prometheus.new(
             '${datasource}',
-            'max(node:windows_node_memory_totalCached_bytes:sum{%(clusterLabel)s="$cluster", instance="$instance"})' % $._config
+            'max(((windows_memory_cache_bytes{%(windowsExporterSelector)s} + windows_memory_modified_page_list_bytes{%(windowsExporterSelector)s} + windows_memory_standby_cache_core_bytes{%(windowsExporterSelector)s} + windows_memory_standby_cache_normal_priority_bytes{%(windowsExporterSelector)s} + windows_memory_standby_cache_reserve_bytes{%(windowsExporterSelector)s})){%(clusterLabel)s="$cluster", instance="$instance"})' % $._config
           )
           + prometheus.withLegendFormat('memory cached'),
 
@@ -1004,7 +1004,7 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'node:windows_node_memory_swap_io_pages:irate{%(clusterLabel)s="$cluster", instance="$instance"}' % $._config
+            '(irate(windows_memory_swap_page_operations_total{%(windowsExporterSelector)s}[5m])){%(clusterLabel)s="$cluster", instance="$instance"}' % $._config
           )
           + prometheus.withLegendFormat('Swap IO'),
         ]),
@@ -1014,7 +1014,7 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'node:windows_node_disk_utilisation:avg_irate{%(clusterLabel)s="$cluster", instance="$instance"}' % $._config
+            '(avg by (%(clusterLabel)s, instance) ( (irate(windows_logical_disk_read_seconds_total{%(windowsExporterSelector)s}[1m]) + irate(windows_logical_disk_write_seconds_total{%(windowsExporterSelector)s}[1m])) )){%(clusterLabel)s="$cluster", instance="$instance"}' % $._config
           )
           + prometheus.withLegendFormat('Utilisation'),
         ]),
@@ -1061,7 +1061,7 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'node:windows_node_filesystem_usage:{%(clusterLabel)s="$cluster", instance="$instance"}' % $._config
+            '(max by (%(clusterLabel)s,instance,volume)( (windows_logical_disk_size_bytes{%(windowsExporterSelector)s} - windows_logical_disk_free_bytes{%(windowsExporterSelector)s}) / windows_logical_disk_size_bytes{%(windowsExporterSelector)s} )){%(clusterLabel)s="$cluster", instance="$instance"}' % $._config
           )
           + prometheus.withLegendFormat('{{volume}}'),
         ]),
@@ -1071,7 +1071,7 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'node:windows_node_net_utilisation:sum_irate{%(clusterLabel)s="$cluster", instance="$instance"}' % $._config
+            '(sum by (%(clusterLabel)s, instance) ( (irate(windows_net_bytes_total{%(windowsExporterSelector)s}[1m])) )){%(clusterLabel)s="$cluster", instance="$instance"}' % $._config
           )
           + prometheus.withLegendFormat('Utilisation'),
         ]),
@@ -1081,7 +1081,7 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'node:windows_node_net_saturation:sum_irate{%(clusterLabel)s="$cluster", instance="$instance"}' % $._config
+            '(sum by (%(clusterLabel)s, instance) ( (irate(windows_net_packets_received_discarded_total{%(windowsExporterSelector)s}[1m]) + irate(windows_net_packets_outbound_discarded_total{%(windowsExporterSelector)s}[1m])) )){%(clusterLabel)s="$cluster", instance="$instance"}' % $._config
           )
           + prometheus.withLegendFormat('Saturation'),
         ]),

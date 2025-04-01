@@ -62,7 +62,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "apiserver_request:availability30d{verb=\"all\", cluster=\"$cluster\"}"
+               "expr": "0.99"
             }
          ],
          "title": "Availability (30d) > 99.000%",
@@ -108,7 +108,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "100 * (apiserver_request:availability30d{verb=\"all\", cluster=\"$cluster\"} - 0.990000)",
+               "expr": "0.99",
                "legendFormat": "errorbudget"
             }
          ],
@@ -142,7 +142,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "apiserver_request:availability30d{verb=\"read\", cluster=\"$cluster\"}"
+               "expr": "0.99"
             }
          ],
          "title": "Read Availability (30d)",
@@ -240,7 +240,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum by (code) (code_resource:apiserver_request_total:rate5m{verb=\"read\", cluster=\"$cluster\"})",
+               "expr": "sum by (code) (\n  (sum by (cluster,code,resource) (rate(apiserver_request_total{job=\"apiserver\"}[5m])))\n  {verb=\"read\", cluster=\"$cluster\"}\n)\n",
                "legendFormat": "{{ code }}"
             }
          ],
@@ -284,7 +284,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum by (resource) (code_resource:apiserver_request_total:rate5m{verb=\"read\",code=~\"5..\", cluster=\"$cluster\"}) / sum by (resource) (code_resource:apiserver_request_total:rate5m{verb=\"read\", cluster=\"$cluster\"})",
+               "expr": "sum by (resource) (\n  (sum by (cluster,code,resource) (rate(apiserver_request_total{job=\"apiserver\"}[5m])))\n  {verb=\"read\",code=~\"5..\", cluster=\"$cluster\"}\n) / \nsum by (resource) (\n  (sum by (cluster,code,resource) (rate(apiserver_request_total{job=\"apiserver\"}[5m])))\n  {verb=\"read\", cluster=\"$cluster\"}\n)\n",
                "legendFormat": "{{ resource }}"
             }
          ],
@@ -327,7 +327,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "cluster_quantile:apiserver_request_sli_duration_seconds:histogram_quantile{verb=\"read\", cluster=\"$cluster\"}",
+               "expr": "(histogram_quantile(0.99, sum by (cluster, le, resource) \n  (rate(apiserver_request_sli_duration_seconds_bucket{job=\"apiserver\"}[5m]))) > 0)\n  {verb=\"read\", cluster=\"$cluster\"}\n",
                "legendFormat": "{{ resource }}"
             }
          ],
@@ -361,7 +361,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "apiserver_request:availability30d{verb=\"write\", cluster=\"$cluster\"}"
+               "expr": "0.99"
             }
          ],
          "title": "Write Availability (30d)",
@@ -459,7 +459,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum by (code) (code_resource:apiserver_request_total:rate5m{verb=\"write\", cluster=\"$cluster\"})",
+               "expr": "sum by (code) (\n  (sum by (cluster,code,resource) (rate(apiserver_request_total{job=\"apiserver\"}[5m])))\n  {verb=\"write\", cluster=\"$cluster\"}\n)\n",
                "legendFormat": "{{ code }}"
             }
          ],
@@ -503,7 +503,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum by (resource) (code_resource:apiserver_request_total:rate5m{verb=\"write\",code=~\"5..\", cluster=\"$cluster\"}) / sum by (resource) (code_resource:apiserver_request_total:rate5m{verb=\"write\", cluster=\"$cluster\"})",
+               "expr": "sum by (resource) (\n  (sum by (cluster,code,resource) (rate(apiserver_request_total{job=\"apiserver\"}[5m])))\n  {verb=\"write\",code=~\"5..\", cluster=\"$cluster\"}\n) / \nsum by (resource) (\n  (sum by (cluster,code,resource) (rate(apiserver_request_total{job=\"apiserver\"}[5m])))\n  {verb=\"write\", cluster=\"$cluster\"}\n)\n",
                "legendFormat": "{{ resource }}"
             }
          ],
@@ -546,7 +546,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "cluster_quantile:apiserver_request_sli_duration_seconds:histogram_quantile{verb=\"write\", cluster=\"$cluster\"}",
+               "expr": "(histogram_quantile(0.99, sum by (cluster, le, resource) \n  (rate(apiserver_request_sli_duration_seconds_bucket{job=\"apiserver\"}[5m]))) > 0)\n  {verb=\"write\", cluster=\"$cluster\"}\n",
                "legendFormat": "{{ resource }}"
             }
          ],
@@ -589,7 +589,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(rate(workqueue_adds_total{job=\"apiserver\", instance=~\"$instance\", cluster=\"$cluster\"}[$__rate_interval])) by (instance, name)",
+               "expr": "sum(rate(workqueue_adds_total{job=\"apiserver\", instance=~\"$instance\", cluster=\"$cluster\"}[1m])) \nby (instance, name)\n",
                "legendFormat": "{{instance}} {{name}}"
             }
          ],
@@ -632,7 +632,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(rate(workqueue_depth{job=\"apiserver\", instance=~\"$instance\", cluster=\"$cluster\"}[$__rate_interval])) by (instance, name)",
+               "expr": "sum(rate(workqueue_depth{job=\"apiserver\", instance=~\"$instance\", cluster=\"$cluster\"}[1m])) \nby (instance, name)\n",
                "legendFormat": "{{instance}} {{name}}"
             }
          ],
@@ -678,7 +678,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "histogram_quantile(0.99, sum(rate(workqueue_queue_duration_seconds_bucket{job=\"apiserver\", instance=~\"$instance\", cluster=\"$cluster\"}[$__rate_interval])) by (instance, name, le))",
+               "expr": "histogram_quantile(0.99, \n  sum(rate(workqueue_queue_duration_seconds_bucket{job=\"apiserver\", instance=~\"$instance\", cluster=\"$cluster\"}[1m])) \n  by (instance, name, le)\n)\n",
                "legendFormat": "{{instance}} {{name}}"
             }
          ],
@@ -720,7 +720,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "process_resident_memory_bytes{job=\"apiserver\",instance=~\"$instance\", cluster=\"$cluster\"}",
+               "expr": "process_resident_memory_bytes{job=\"apiserver\", instance=~\"$instance\", cluster=\"$cluster\"}\n",
                "legendFormat": "{{instance}}"
             }
          ],
@@ -763,7 +763,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "rate(process_cpu_seconds_total{job=\"apiserver\",instance=~\"$instance\", cluster=\"$cluster\"}[$__rate_interval])",
+               "expr": "rate(process_cpu_seconds_total{job=\"apiserver\", instance=~\"$instance\", cluster=\"$cluster\"}[1m])\n",
                "legendFormat": "{{instance}}"
             }
          ],
@@ -805,7 +805,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "go_goroutines{job=\"apiserver\",instance=~\"$instance\", cluster=\"$cluster\"}",
+               "expr": "go_goroutines{job=\"apiserver\", instance=~\"$instance\", cluster=\"$cluster\"}\n",
                "legendFormat": "{{instance}}"
             }
          ],

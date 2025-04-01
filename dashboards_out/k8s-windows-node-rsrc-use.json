@@ -45,7 +45,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "node:windows_node_cpu_utilisation:avg1m{cluster=\"$cluster\", instance=\"$instance\"}",
+               "expr": "(1 - avg by (cluster, instance) ( rate(windows_cpu_time_total{job=\"kubernetes-windows-exporter\",mode=\"idle\"}[1m]) )){cluster=\"$cluster\", instance=\"$instance\"}",
                "legendFormat": "Utilisation"
             }
          ],
@@ -147,7 +147,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "node:windows_node_memory_utilisation:{cluster=\"$cluster\", instance=\"$instance\"}",
+               "expr": "(1 - ((sum by (cluster, instance) ( (windows_memory_available_bytes{job=\"kubernetes-windows-exporter\"}) )) / (sum by (cluster, instance) ( windows_os_visible_memory_bytes{job=\"kubernetes-windows-exporter\"} )))){cluster=\"$cluster\", instance=\"$instance\"}",
                "legendFormat": "Memory"
             }
          ],
@@ -206,7 +206,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "max(node:windows_node_memory_totalCached_bytes:sum{cluster=\"$cluster\", instance=\"$instance\"})",
+               "expr": "max(((windows_memory_cache_bytes{job=\"kubernetes-windows-exporter\"} + windows_memory_modified_page_list_bytes{job=\"kubernetes-windows-exporter\"} + windows_memory_standby_cache_core_bytes{job=\"kubernetes-windows-exporter\"} + windows_memory_standby_cache_normal_priority_bytes{job=\"kubernetes-windows-exporter\"} + windows_memory_standby_cache_reserve_bytes{job=\"kubernetes-windows-exporter\"})){cluster=\"$cluster\", instance=\"$instance\"})",
                "legendFormat": "memory cached"
             },
             {
@@ -265,7 +265,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "node:windows_node_memory_swap_io_pages:irate{cluster=\"$cluster\", instance=\"$instance\"}",
+               "expr": "(irate(windows_memory_swap_page_operations_total{job=\"kubernetes-windows-exporter\"}[5m])){cluster=\"$cluster\", instance=\"$instance\"}",
                "legendFormat": "Swap IO"
             }
          ],
@@ -316,7 +316,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "node:windows_node_disk_utilisation:avg_irate{cluster=\"$cluster\", instance=\"$instance\"}",
+               "expr": "(avg by (cluster, instance) ( (irate(windows_logical_disk_read_seconds_total{job=\"kubernetes-windows-exporter\"}[1m]) + irate(windows_logical_disk_write_seconds_total{job=\"kubernetes-windows-exporter\"}[1m])) )){cluster=\"$cluster\", instance=\"$instance\"}",
                "legendFormat": "Utilisation"
             }
          ],
@@ -448,7 +448,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "node:windows_node_filesystem_usage:{cluster=\"$cluster\", instance=\"$instance\"}",
+               "expr": "(max by (cluster,instance,volume)( (windows_logical_disk_size_bytes{job=\"kubernetes-windows-exporter\"} - windows_logical_disk_free_bytes{job=\"kubernetes-windows-exporter\"}) / windows_logical_disk_size_bytes{job=\"kubernetes-windows-exporter\"} )){cluster=\"$cluster\", instance=\"$instance\"}",
                "legendFormat": "{{volume}}"
             }
          ],
@@ -499,7 +499,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "node:windows_node_net_utilisation:sum_irate{cluster=\"$cluster\", instance=\"$instance\"}",
+               "expr": "(sum by (cluster, instance) ( (irate(windows_net_bytes_total{job=\"kubernetes-windows-exporter\"}[1m])) )){cluster=\"$cluster\", instance=\"$instance\"}",
                "legendFormat": "Utilisation"
             }
          ],
@@ -550,7 +550,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "node:windows_node_net_saturation:sum_irate{cluster=\"$cluster\", instance=\"$instance\"}",
+               "expr": "(sum by (cluster, instance) ( (irate(windows_net_packets_received_discarded_total{job=\"kubernetes-windows-exporter\"}[1m]) + irate(windows_net_packets_outbound_discarded_total{job=\"kubernetes-windows-exporter\"}[1m])) )){cluster=\"$cluster\", instance=\"$instance\"}",
                "legendFormat": "Saturation"
             }
          ],

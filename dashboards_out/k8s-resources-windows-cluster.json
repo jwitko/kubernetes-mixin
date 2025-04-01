@@ -64,7 +64,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(kube_pod_windows_container_resource_cpu_cores_request{cluster=\"$cluster\"}) / sum(node:windows_node_num_cpu:sum{cluster=\"$cluster\"})",
+               "expr": "sum((max by (cluster, namespace, pod, container) ( kube_pod_container_resource_requests{resource=\"cpu\",job=\"kube-state-metrics\"} ) * on(container,pod,namespace,cluster) ((windows_container_available{job=\"kubernetes-windows-exporter\", container_id != \"\"} * on(container_id, cluster) group_left(container, pod, namespace) max(kube_pod_container_info{job=\"kube-state-metrics\", container_id != \"\"}) by(container, container_id, pod, namespace, cluster)))){cluster=\"$cluster\"}) / sum((count by (cluster, instance) (sum by (cluster, instance, core) ( windows_cpu_time_total{job=\"kubernetes-windows-exporter\"} ))){cluster=\"$cluster\"})",
                "instant": true
             }
          ],
@@ -99,7 +99,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(kube_pod_windows_container_resource_cpu_cores_limit{cluster=\"$cluster\"}) / sum(node:windows_node_num_cpu:sum{cluster=\"$cluster\"})",
+               "expr": "sum((kube_pod_container_resource_limits{resource=\"cpu\",job=\"kube-state-metrics\"} * on(container,pod,namespace,cluster) ((windows_container_available{job=\"kubernetes-windows-exporter\", container_id != \"\"} * on(container_id, cluster) group_left(container, pod, namespace) max(kube_pod_container_info{job=\"kube-state-metrics\", container_id != \"\"}) by(container, container_id, pod, namespace, cluster)))){cluster=\"$cluster\"}) / sum((count by (cluster, instance) (sum by (cluster, instance, core) ( windows_cpu_time_total{job=\"kubernetes-windows-exporter\"} ))){cluster=\"$cluster\"})",
                "instant": true
             }
          ],
@@ -134,7 +134,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "1 - sum(:windows_node_memory_MemFreeCached_bytes:sum{cluster=\"$cluster\"}) / sum(:windows_node_memory_MemTotal_bytes:sum{cluster=\"$cluster\"})",
+               "expr": "1 - sum((sum by (cluster) (windows_memory_available_bytes{job=\"kubernetes-windows-exporter\"} + windows_memory_cache_bytes{job=\"kubernetes-windows-exporter\"})){cluster=\"$cluster\"}) / sum((sum by (cluster) (windows_os_visible_memory_bytes{job=\"kubernetes-windows-exporter\"})){cluster=\"$cluster\"})",
                "instant": true
             }
          ],
@@ -169,7 +169,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(kube_pod_windows_container_resource_memory_request{cluster=\"$cluster\"}) / sum(:windows_node_memory_MemTotal_bytes:sum{cluster=\"$cluster\"})",
+               "expr": "sum((max by (cluster, namespace, pod, container) ( kube_pod_container_resource_requests{resource=\"memory\",job=\"kube-state-metrics\"} ) * on(container,pod,namespace,cluster) ((windows_container_available{job=\"kubernetes-windows-exporter\", container_id != \"\"} * on(container_id, cluster) group_left(container, pod, namespace) max(kube_pod_container_info{job=\"kube-state-metrics\", container_id != \"\"}) by(container, container_id, pod, namespace, cluster)))){cluster=\"$cluster\"}) / sum((sum by (cluster) (windows_os_visible_memory_bytes{job=\"kubernetes-windows-exporter\"})){cluster=\"$cluster\"})",
                "instant": true
             }
          ],
@@ -204,7 +204,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(kube_pod_windows_container_resource_memory_limit{cluster=\"$cluster\"}) / sum(:windows_node_memory_MemTotal_bytes:sum{cluster=\"$cluster\"})",
+               "expr": "sum((kube_pod_container_resource_limits{resource=\"memory\",job=\"kube-state-metrics\"} * on(container,pod,namespace,cluster) ((windows_container_available{job=\"kubernetes-windows-exporter\", container_id != \"\"} * on(container_id, cluster) group_left(container, pod, namespace) max(kube_pod_container_info{job=\"kube-state-metrics\", container_id != \"\"}) by(container, container_id, pod, namespace, cluster)))){cluster=\"$cluster\"}) / sum((sum by (cluster) (windows_os_visible_memory_bytes{job=\"kubernetes-windows-exporter\"})){cluster=\"$cluster\"})",
                "instant": true
             }
          ],
@@ -254,7 +254,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(namespace_pod_container:windows_container_cpu_usage_seconds_total:sum_rate{cluster=\"$cluster\"}) by (namespace)",
+               "expr": "sum((sum by (cluster, namespace, pod, container) ( rate((windows_container_cpu_usage_seconds_total{job=\"kubernetes-windows-exporter\", container_id != \"\"} * on(container_id, cluster) group_left(container, pod, namespace) max(kube_pod_container_info{job=\"kube-state-metrics\", container_id != \"\"}) by(container, container_id, pod, namespace, cluster)){}[5m]) )){cluster=\"$cluster\"}) by (namespace)",
                "legendFormat": "__auto"
             }
          ],
@@ -313,7 +313,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(namespace_pod_container:windows_container_cpu_usage_seconds_total:sum_rate{cluster=\"$cluster\"}) by (namespace)",
+               "expr": "sum((sum by (cluster, namespace, pod, container) ( rate((windows_container_cpu_usage_seconds_total{job=\"kubernetes-windows-exporter\", container_id != \"\"} * on(container_id, cluster) group_left(container, pod, namespace) max(kube_pod_container_info{job=\"kube-state-metrics\", container_id != \"\"}) by(container, container_id, pod, namespace, cluster)){}[5m]) )){cluster=\"$cluster\"}) by (namespace)",
                "format": "table",
                "instant": true
             },
@@ -322,7 +322,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(kube_pod_windows_container_resource_cpu_cores_request{cluster=\"$cluster\"}) by (namespace)",
+               "expr": "sum((max by (cluster, namespace, pod, container) ( kube_pod_container_resource_requests{resource=\"cpu\",job=\"kube-state-metrics\"} ) * on(container,pod,namespace,cluster) ((windows_container_available{job=\"kubernetes-windows-exporter\", container_id != \"\"} * on(container_id, cluster) group_left(container, pod, namespace) max(kube_pod_container_info{job=\"kube-state-metrics\", container_id != \"\"}) by(container, container_id, pod, namespace, cluster)))){cluster=\"$cluster\"}) by (namespace)",
                "format": "table",
                "instant": true
             },
@@ -331,7 +331,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(namespace_pod_container:windows_container_cpu_usage_seconds_total:sum_rate{cluster=\"$cluster\"}) by (namespace) / sum(kube_pod_windows_container_resource_cpu_cores_request{cluster=\"$cluster\"}) by (namespace)",
+               "expr": "sum((sum by (cluster, namespace, pod, container) ( rate((windows_container_cpu_usage_seconds_total{job=\"kubernetes-windows-exporter\", container_id != \"\"} * on(container_id, cluster) group_left(container, pod, namespace) max(kube_pod_container_info{job=\"kube-state-metrics\", container_id != \"\"}) by(container, container_id, pod, namespace, cluster)){}[5m]) )){cluster=\"$cluster\"}) by (namespace) / sum((max by (cluster, namespace, pod, container) ( kube_pod_container_resource_requests{resource=\"cpu\",job=\"kube-state-metrics\"} ) * on(container,pod,namespace,cluster) ((windows_container_available{job=\"kubernetes-windows-exporter\", container_id != \"\"} * on(container_id, cluster) group_left(container, pod, namespace) max(kube_pod_container_info{job=\"kube-state-metrics\", container_id != \"\"}) by(container, container_id, pod, namespace, cluster)))){cluster=\"$cluster\"}) by (namespace)",
                "format": "table",
                "instant": true
             },
@@ -340,7 +340,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(kube_pod_windows_container_resource_cpu_cores_limit{cluster=\"$cluster\"}) by (namespace)",
+               "expr": "sum((kube_pod_container_resource_limits{resource=\"cpu\",job=\"kube-state-metrics\"} * on(container,pod,namespace,cluster) ((windows_container_available{job=\"kubernetes-windows-exporter\", container_id != \"\"} * on(container_id, cluster) group_left(container, pod, namespace) max(kube_pod_container_info{job=\"kube-state-metrics\", container_id != \"\"}) by(container, container_id, pod, namespace, cluster)))){cluster=\"$cluster\"}) by (namespace)",
                "format": "table",
                "instant": true
             },
@@ -349,7 +349,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(namespace_pod_container:windows_container_cpu_usage_seconds_total:sum_rate{cluster=\"$cluster\"}) by (namespace) / sum(kube_pod_windows_container_resource_cpu_cores_limit{cluster=\"$cluster\"}) by (namespace)",
+               "expr": "sum((sum by (cluster, namespace, pod, container) ( rate((windows_container_cpu_usage_seconds_total{job=\"kubernetes-windows-exporter\", container_id != \"\"} * on(container_id, cluster) group_left(container, pod, namespace) max(kube_pod_container_info{job=\"kube-state-metrics\", container_id != \"\"}) by(container, container_id, pod, namespace, cluster)){}[5m]) )){cluster=\"$cluster\"}) by (namespace) / sum((kube_pod_container_resource_limits{resource=\"cpu\",job=\"kube-state-metrics\"} * on(container,pod,namespace,cluster) ((windows_container_available{job=\"kubernetes-windows-exporter\", container_id != \"\"} * on(container_id, cluster) group_left(container, pod, namespace) max(kube_pod_container_info{job=\"kube-state-metrics\", container_id != \"\"}) by(container, container_id, pod, namespace, cluster)))){cluster=\"$cluster\"}) by (namespace)",
                "format": "table",
                "instant": true
             }
@@ -444,7 +444,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(windows_container_private_working_set_usage{cluster=\"$cluster\"}) by (namespace)",
+               "expr": "sum((((windows_container_memory_usage_commit_bytes{job=\"kubernetes-windows-exporter\", container_id != \"\"} * on(container_id, cluster) group_left(container, pod, namespace) max(kube_pod_container_info{job=\"kube-state-metrics\", container_id != \"\"}) by(container, container_id, pod, namespace, cluster))_commit_bytes{job=\"kubernetes-windows-exporter\", container_id != \"\"} * on(container_id, cluster) group_left(container, pod, namespace) max(kube_pod_container_info{job=\"kube-state-metrics\", container_id != \"\"}) by(container, container_id, pod, namespace, cluster))_private_working_set_bytes{job=\"kubernetes-windows-exporter\", container_id != \"\"} * on(container_id, cluster) group_left(container, pod, namespace) max(kube_pod_container_info{job=\"kube-state-metrics\", container_id != \"\"}) by(container, container_id, pod, namespace, cluster)){cluster=\"$cluster\"}) by (namespace)",
                "legendFormat": "__auto"
             }
          ],
@@ -542,7 +542,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(windows_container_private_working_set_usage{cluster=\"$cluster\"}) by (namespace)",
+               "expr": "sum((((windows_container_memory_usage_commit_bytes{job=\"kubernetes-windows-exporter\", container_id != \"\"} * on(container_id, cluster) group_left(container, pod, namespace) max(kube_pod_container_info{job=\"kube-state-metrics\", container_id != \"\"}) by(container, container_id, pod, namespace, cluster))_commit_bytes{job=\"kubernetes-windows-exporter\", container_id != \"\"} * on(container_id, cluster) group_left(container, pod, namespace) max(kube_pod_container_info{job=\"kube-state-metrics\", container_id != \"\"}) by(container, container_id, pod, namespace, cluster))_private_working_set_bytes{job=\"kubernetes-windows-exporter\", container_id != \"\"} * on(container_id, cluster) group_left(container, pod, namespace) max(kube_pod_container_info{job=\"kube-state-metrics\", container_id != \"\"}) by(container, container_id, pod, namespace, cluster)){cluster=\"$cluster\"}) by (namespace)",
                "format": "table",
                "instant": true
             },
@@ -551,7 +551,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(kube_pod_windows_container_resource_memory_request{cluster=\"$cluster\"}) by (namespace)",
+               "expr": "sum((max by (cluster, namespace, pod, container) ( kube_pod_container_resource_requests{resource=\"memory\",job=\"kube-state-metrics\"} ) * on(container,pod,namespace,cluster) ((windows_container_available{job=\"kubernetes-windows-exporter\", container_id != \"\"} * on(container_id, cluster) group_left(container, pod, namespace) max(kube_pod_container_info{job=\"kube-state-metrics\", container_id != \"\"}) by(container, container_id, pod, namespace, cluster)))){cluster=\"$cluster\"}) by (namespace)",
                "format": "table",
                "instant": true
             },
@@ -560,7 +560,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(windows_container_private_working_set_usage{cluster=\"$cluster\"}) by (namespace) / sum(kube_pod_windows_container_resource_memory_request{cluster=\"$cluster\"}) by (namespace)",
+               "expr": "sum((((windows_container_memory_usage_commit_bytes{job=\"kubernetes-windows-exporter\", container_id != \"\"} * on(container_id, cluster) group_left(container, pod, namespace) max(kube_pod_container_info{job=\"kube-state-metrics\", container_id != \"\"}) by(container, container_id, pod, namespace, cluster))_commit_bytes{job=\"kubernetes-windows-exporter\", container_id != \"\"} * on(container_id, cluster) group_left(container, pod, namespace) max(kube_pod_container_info{job=\"kube-state-metrics\", container_id != \"\"}) by(container, container_id, pod, namespace, cluster))_private_working_set_bytes{job=\"kubernetes-windows-exporter\", container_id != \"\"} * on(container_id, cluster) group_left(container, pod, namespace) max(kube_pod_container_info{job=\"kube-state-metrics\", container_id != \"\"}) by(container, container_id, pod, namespace, cluster)){cluster=\"$cluster\"}) by (namespace) / sum((max by (cluster, namespace, pod, container) ( kube_pod_container_resource_requests{resource=\"memory\",job=\"kube-state-metrics\"} ) * on(container,pod,namespace,cluster) ((windows_container_available{job=\"kubernetes-windows-exporter\", container_id != \"\"} * on(container_id, cluster) group_left(container, pod, namespace) max(kube_pod_container_info{job=\"kube-state-metrics\", container_id != \"\"}) by(container, container_id, pod, namespace, cluster)))){cluster=\"$cluster\"}) by (namespace)",
                "format": "table",
                "instant": true
             },
@@ -569,7 +569,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(kube_pod_windows_container_resource_memory_limit{cluster=\"$cluster\"}) by (namespace)",
+               "expr": "sum((kube_pod_container_resource_limits{resource=\"memory\",job=\"kube-state-metrics\"} * on(container,pod,namespace,cluster) ((windows_container_available{job=\"kubernetes-windows-exporter\", container_id != \"\"} * on(container_id, cluster) group_left(container, pod, namespace) max(kube_pod_container_info{job=\"kube-state-metrics\", container_id != \"\"}) by(container, container_id, pod, namespace, cluster)))){cluster=\"$cluster\"}) by (namespace)",
                "format": "table",
                "instant": true
             },
@@ -578,7 +578,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(windows_container_private_working_set_usage{cluster=\"$cluster\"}) by (namespace) / sum(kube_pod_windows_container_resource_memory_limit{cluster=\"$cluster\"}) by (namespace)",
+               "expr": "sum((((windows_container_memory_usage_commit_bytes{job=\"kubernetes-windows-exporter\", container_id != \"\"} * on(container_id, cluster) group_left(container, pod, namespace) max(kube_pod_container_info{job=\"kube-state-metrics\", container_id != \"\"}) by(container, container_id, pod, namespace, cluster))_commit_bytes{job=\"kubernetes-windows-exporter\", container_id != \"\"} * on(container_id, cluster) group_left(container, pod, namespace) max(kube_pod_container_info{job=\"kube-state-metrics\", container_id != \"\"}) by(container, container_id, pod, namespace, cluster))_private_working_set_bytes{job=\"kubernetes-windows-exporter\", container_id != \"\"} * on(container_id, cluster) group_left(container, pod, namespace) max(kube_pod_container_info{job=\"kube-state-metrics\", container_id != \"\"}) by(container, container_id, pod, namespace, cluster)){cluster=\"$cluster\"}) by (namespace) / sum((kube_pod_container_resource_limits{resource=\"memory\",job=\"kube-state-metrics\"} * on(container,pod,namespace,cluster) ((windows_container_available{job=\"kubernetes-windows-exporter\", container_id != \"\"} * on(container_id, cluster) group_left(container, pod, namespace) max(kube_pod_container_info{job=\"kube-state-metrics\", container_id != \"\"}) by(container, container_id, pod, namespace, cluster)))){cluster=\"$cluster\"}) by (namespace)",
                "format": "table",
                "instant": true
             }
