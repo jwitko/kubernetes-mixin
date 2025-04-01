@@ -7,11 +7,11 @@ local utils = import '../lib/utils.libsonnet';
     kubeDaemonSetRolloutStuckFor: '15m',
     namespaceSelector: null,
     prefixedNamespaceSelector: if self.namespaceSelector != null then self.namespaceSelector + ',' else '',
-    
+
     clusterLabel: 'cluster',
     showMultiCluster: false,
     namespaceLabel: 'namespace',
-    
+
     grafanaDatasourceUid: 'P09C4D52DEC9B98E6',
     grafanaIntervalMs: 60000,
     grafanaNoDataState: 'OK',
@@ -383,7 +383,7 @@ local utils = import '../lib/utils.libsonnet';
         labels: { [k]: rule.labels[k] for k in std.objectFields(std.get(rule, 'labels', {})) },
         annotations: { [k]: rule.annotations[k] for k in std.objectFields(std.get(rule, 'annotations', {})) },
       }, $._config)
-      for rule in group.rules // Iterate over rules
+      for rule in group.rules  // Iterate over rules
       if std.objectHas(rule, 'alert')
     ]
     // Iterate over groups defined in *this* file's context

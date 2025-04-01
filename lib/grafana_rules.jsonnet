@@ -44,4 +44,4 @@ local grafanaRules = [
 ];
 
 // Output the final array as a JSON string
-std.manifestJson(grafanaRules) 
+std.manifestJson(grafanaRules)

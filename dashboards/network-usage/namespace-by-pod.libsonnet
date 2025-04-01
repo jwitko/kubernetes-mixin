@@ -103,15 +103,8 @@ local var = g.dashboard.variable;
         + gauge.queryOptions.withTargets([
           prometheus.new(
             '${datasource}', |||
-              sum (
-                  rate(container_network_receive_bytes_total{%(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s])
-                * on (%(clusterLabel)s,namespace,pod) group_left ()
-                  topk by (%(clusterLabel)s,namespace,pod) (
-                    1,
-                    max by (%(clusterLabel)s,namespace,pod) (kube_pod_info{host_network="false"})
-                  )
-              )
-            ||| % $._config
+  sum ( rate(container_network_receive_bytes_total{%(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s]) * on (%(clusterLabel)s,namespace,pod) group_left () topk by (%(clusterLabel)s,namespace,pod) ( 1, max by (%(clusterLabel)s,namespace,pod) (kube_pod_info{host_network="false"}) ) )
+||| % $._config
           )
           + prometheus.withLegendFormat('__auto'),
         ]),
@@ -141,15 +134,8 @@ local var = g.dashboard.variable;
         + gauge.queryOptions.withTargets([
           prometheus.new(
             '${datasource}', |||
-              sum (
-                  rate(container_network_transmit_bytes_total{%(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s])
-                * on (%(clusterLabel)s,namespace,pod) group_left ()
-                  topk by (%(clusterLabel)s,namespace,pod) (
-                    1,
-                    max by (%(clusterLabel)s,namespace,pod) (kube_pod_info{host_network="false"})
-                  )
-              )
-            ||| % $._config
+  sum ( rate(container_network_transmit_bytes_total{%(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s]) * on (%(clusterLabel)s,namespace,pod) group_left () topk by (%(clusterLabel)s,namespace,pod) ( 1, max by (%(clusterLabel)s,namespace,pod) (kube_pod_info{host_network="false"}) ) )
+||| % $._config
           )
           + prometheus.withLegendFormat('__auto'),
         ]),
@@ -159,90 +145,48 @@ local var = g.dashboard.variable;
         + table.queryOptions.withTargets([
           prometheus.new(
             '${datasource}', |||
-              sum by (pod) (
-                  rate(container_network_receive_bytes_total{%(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s])
-                * on (%(clusterLabel)s,namespace,pod) group_left ()
-                  topk by (%(clusterLabel)s,namespace,pod) (
-                    1,
-                    max by (%(clusterLabel)s,namespace,pod) (kube_pod_info{host_network="false"})
-                  )
-              )
-            ||| % $._config
+  sum by (pod) ( rate(container_network_receive_bytes_total{%(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s]) * on (%(clusterLabel)s,namespace,pod) group_left () topk by (%(clusterLabel)s,namespace,pod) ( 1, max by (%(clusterLabel)s,namespace,pod) (kube_pod_info{host_network="false"}) ) )
+||| % $._config
           )
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
           prometheus.new(
             '${datasource}', |||
-              sum by (pod) (
-                  rate(container_network_transmit_bytes_total{%(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s])
-                * on (%(clusterLabel)s,namespace,pod) group_left ()
-                  topk by (%(clusterLabel)s,namespace,pod) (
-                    1,
-                    max by (%(clusterLabel)s,namespace,pod) (kube_pod_info{host_network="false"})
-                  )
-              )
-            ||| % $._config
+  sum by (pod) ( rate(container_network_transmit_bytes_total{%(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s]) * on (%(clusterLabel)s,namespace,pod) group_left () topk by (%(clusterLabel)s,namespace,pod) ( 1, max by (%(clusterLabel)s,namespace,pod) (kube_pod_info{host_network="false"}) ) )
+||| % $._config
           )
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
           prometheus.new(
             '${datasource}', |||
-              sum by (pod) (
-                  rate(container_network_receive_packets_total{%(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s])
-                * on (%(clusterLabel)s,namespace,pod) group_left ()
-                  topk by (%(clusterLabel)s,namespace,pod) (
-                    1,
-                    max by (%(clusterLabel)s,namespace,pod) (kube_pod_info{host_network="false"})
-                  )
-              )
-            ||| % $._config
+  sum by (pod) ( rate(container_network_receive_packets_total{%(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s]) * on (%(clusterLabel)s,namespace,pod) group_left () topk by (%(clusterLabel)s,namespace,pod) ( 1, max by (%(clusterLabel)s,namespace,pod) (kube_pod_info{host_network="false"}) ) )
+||| % $._config
           )
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
           prometheus.new(
             '${datasource}', |||
-              sum by (pod) (
-                  rate(container_network_transmit_packets_total{%(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s])
-                * on (%(clusterLabel)s,namespace,pod) group_left ()
-                  topk by (%(clusterLabel)s,namespace,pod) (
-                    1,
-                    max by (%(clusterLabel)s,namespace,pod) (kube_pod_info{host_network="false"})
-                  )
-              )
-            ||| % $._config
+  sum by (pod) ( rate(container_network_transmit_packets_total{%(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s]) * on (%(clusterLabel)s,namespace,pod) group_left () topk by (%(clusterLabel)s,namespace,pod) ( 1, max by (%(clusterLabel)s,namespace,pod) (kube_pod_info{host_network="false"}) ) )
+||| % $._config
           )
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
           prometheus.new(
             '${datasource}', |||
-              sum by (pod) (
-                  rate(container_network_receive_packets_dropped_total{%(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s])
-                * on (%(clusterLabel)s,namespace,pod) group_left ()
-                  topk by (%(clusterLabel)s,namespace,pod) (
-                    1,
-                    max by (%(clusterLabel)s,namespace,pod) (kube_pod_info{host_network="false"})
-                  )
-              )
-            ||| % $._config
+  sum by (pod) ( rate(container_network_receive_packets_dropped_total{%(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s]) * on (%(clusterLabel)s,namespace,pod) group_left () topk by (%(clusterLabel)s,namespace,pod) ( 1, max by (%(clusterLabel)s,namespace,pod) (kube_pod_info{host_network="false"}) ) )
+||| % $._config
           )
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
           prometheus.new(
             '${datasource}', |||
-              sum by (pod) (
-                  rate(container_network_transmit_packets_dropped_total{%(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s])
-                * on (%(clusterLabel)s,namespace,pod) group_left ()
-                  topk by (%(clusterLabel)s,namespace,pod) (
-                    1,
-                    max by (%(clusterLabel)s,namespace,pod) (kube_pod_info{host_network="false"})
-                  )
-              )
-            ||| % $._config
+  sum by (pod) ( rate(container_network_transmit_packets_dropped_total{%(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s]) * on (%(clusterLabel)s,namespace,pod) group_left () topk by (%(clusterLabel)s,namespace,pod) ( 1, max by (%(clusterLabel)s,namespace,pod) (kube_pod_info{host_network="false"}) ) )
+||| % $._config
           )
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
@@ -337,15 +281,8 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}', |||
-              sum by (pod) (
-                  rate(container_network_receive_bytes_total{%(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s])
-                * on (%(clusterLabel)s,namespace,pod) group_left ()
-                  topk by (%(clusterLabel)s,namespace,pod) (
-                    1,
-                    max by (%(clusterLabel)s,namespace,pod) (kube_pod_info{host_network="false"})
-                  )
-              )
-            ||| % $._config
+  sum by (pod) ( rate(container_network_receive_bytes_total{%(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s]) * on (%(clusterLabel)s,namespace,pod) group_left () topk by (%(clusterLabel)s,namespace,pod) ( 1, max by (%(clusterLabel)s,namespace,pod) (kube_pod_info{host_network="false"}) ) )
+||| % $._config
           )
           + prometheus.withLegendFormat('__auto'),
         ]),
@@ -355,15 +292,8 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}', |||
-              sum by (pod) (
-                  rate(container_network_transmit_bytes_total{%(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s])
-                * on (%(clusterLabel)s,namespace,pod) group_left ()
-                  topk by (%(clusterLabel)s,namespace,pod) (
-                    1,
-                    max by (%(clusterLabel)s,namespace,pod) (kube_pod_info{host_network="false"})
-                  )
-              )
-            ||| % $._config
+  sum by (pod) ( rate(container_network_transmit_bytes_total{%(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s]) * on (%(clusterLabel)s,namespace,pod) group_left () topk by (%(clusterLabel)s,namespace,pod) ( 1, max by (%(clusterLabel)s,namespace,pod) (kube_pod_info{host_network="false"}) ) )
+||| % $._config
           )
           + prometheus.withLegendFormat('__auto'),
         ]),
@@ -373,15 +303,8 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}', |||
-              sum by (pod) (
-                  rate(container_network_receive_packets_total{%(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s])
-                * on (%(clusterLabel)s,namespace,pod) group_left ()
-                  topk by (%(clusterLabel)s,namespace,pod) (
-                    1,
-                    max by (%(clusterLabel)s,namespace,pod) (kube_pod_info{host_network="false"})
-                  )
-              )
-            ||| % $._config
+  sum by (pod) ( rate(container_network_receive_packets_total{%(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s]) * on (%(clusterLabel)s,namespace,pod) group_left () topk by (%(clusterLabel)s,namespace,pod) ( 1, max by (%(clusterLabel)s,namespace,pod) (kube_pod_info{host_network="false"}) ) )
+||| % $._config
           )
           + prometheus.withLegendFormat('__auto'),
         ]),
@@ -391,15 +314,8 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}', |||
-              sum by (pod) (
-                  rate(container_network_transmit_packets_total{%(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s])
-                * on (%(clusterLabel)s,namespace,pod) group_left ()
-                  topk by (%(clusterLabel)s,namespace,pod) (
-                    1,
-                    max by (%(clusterLabel)s,namespace,pod) (kube_pod_info{host_network="false"})
-                  )
-              )
-            ||| % $._config
+  sum by (pod) ( rate(container_network_transmit_packets_total{%(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s]) * on (%(clusterLabel)s,namespace,pod) group_left () topk by (%(clusterLabel)s,namespace,pod) ( 1, max by (%(clusterLabel)s,namespace,pod) (kube_pod_info{host_network="false"}) ) )
+||| % $._config
           )
           + prometheus.withLegendFormat('__auto'),
         ]),
@@ -409,15 +325,8 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}', |||
-              sum by (pod) (
-                  rate(container_network_receive_packets_dropped_total{%(clusterLabel)s="$cluster",namespace!=""}[%(grafanaIntervalVar)s])
-                * on (%(clusterLabel)s,namespace,pod) group_left ()
-                  topk by (%(clusterLabel)s,namespace,pod) (
-                    1,
-                    max by (%(clusterLabel)s,namespace,pod) (kube_pod_info{host_network="false"})
-                  )
-              )
-            ||| % $._config
+  sum by (pod) ( rate(container_network_receive_packets_dropped_total{%(clusterLabel)s="$cluster",namespace!=""}[%(grafanaIntervalVar)s]) * on (%(clusterLabel)s,namespace,pod) group_left () topk by (%(clusterLabel)s,namespace,pod) ( 1, max by (%(clusterLabel)s,namespace,pod) (kube_pod_info{host_network="false"}) ) )
+||| % $._config
           )
           + prometheus.withLegendFormat('__auto'),
         ]),
@@ -427,15 +336,8 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}', |||
-              sum by (pod) (
-                  rate(container_network_transmit_packets_dropped_total{%(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s])
-                * on (%(clusterLabel)s,namespace,pod) group_left ()
-                  topk by (%(clusterLabel)s,namespace,pod) (
-                    1,
-                    max by (%(clusterLabel)s,namespace,pod) (kube_pod_info{host_network="false"})
-                  )
-              )
-            ||| % $._config
+  sum by (pod) ( rate(container_network_transmit_packets_dropped_total{%(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s]) * on (%(clusterLabel)s,namespace,pod) group_left () topk by (%(clusterLabel)s,namespace,pod) ( 1, max by (%(clusterLabel)s,namespace,pod) (kube_pod_info{host_network="false"}) ) )
+||| % $._config
           )
           + prometheus.withLegendFormat('__auto'),
         ]),

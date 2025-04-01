@@ -20,8 +20,8 @@ local finalGrafanaGroups = [
   {
     name: groupName,
     // Use a default interval or potentially make it configurable via _config
-    interval: std.get(config, 'grafanaAlertGroupInterval', '1m'), // Example: get from config or default
-    rules: aggregatedGrafanaAlerts[groupName], // The array of rules for this group
+    interval: std.get(config, 'grafanaAlertGroupInterval', '1m'),  // Example: get from config or default
+    rules: aggregatedGrafanaAlerts[groupName],  // The array of rules for this group
   }
   // Iterate over the group names (keys) in the aggregated object
   for groupName in std.objectFields(aggregatedGrafanaAlerts)
@@ -32,4 +32,4 @@ local finalGrafanaGroups = [
 // If Grafana needs one JSON object per group file, this needs adjustment.
 // If Grafana needs one large file with all groups in one array, this is closer.
 // Assuming Grafana wants a list of groups for now.
-std.manifestJson(finalGrafanaGroups) 
+std.manifestJson(finalGrafanaGroups)

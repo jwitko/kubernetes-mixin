@@ -13,7 +13,7 @@ local config = mixin._config {
 };
 
 // Function to remove newlines and extra whitespace from expressions
-local cleanExpr(expr) = 
+local cleanExpr(expr) =
   std.strReplace(std.strReplace(expr, '\n', ' '), '  ', ' ');
 
 // Access the aggregated Grafana alerts (object keyed by group name)
@@ -26,14 +26,14 @@ local cleanedAlerts = {
       [if std.objectHas(alert, 'grafana_alert') then 'grafana_alert']: alert.grafana_alert {
         [if std.objectHas(alert.grafana_alert, 'data') then 'data']: [
           item {
-            [if std.objectHas(item, 'model') && std.objectHas(item.model, 'expr') then 'model']: 
+            [if std.objectHas(item, 'model') && std.objectHas(item.model, 'expr') then 'model']:
               item.model {
-                expr: cleanExpr(item.model.expr)
-              }
+                expr: cleanExpr(item.model.expr),
+              },
           }
           for item in alert.grafana_alert.data
-        ]
-      }
+        ],
+      },
     }
     for alert in aggregatedGrafanaAlerts[groupName]
   ]
@@ -55,8 +55,8 @@ local compactJSON(json) =
     name: groupName,
     // Use a default interval or potentially make it configurable via _config
     interval: std.get(config, 'grafanaAlertGroupInterval', '1m'),
-    rules: cleanedAlerts[groupName], // The array of rules for this group with cleaned expressions
+    rules: cleanedAlerts[groupName],  // The array of rules for this group with cleaned expressions
   }))  // Compact the JSON output
   // Iterate over the group names (keys) in the aggregated object
   for groupName in std.objectFields(aggregatedGrafanaAlerts)
-} 
+}

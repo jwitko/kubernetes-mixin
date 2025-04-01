@@ -79,10 +79,8 @@ local var = g.dashboard.variable;
       };
 
       local cpuRequestsQuery = |||
-        sum(
-            kube_pod_container_resource_requests{%(kubeStateMetricsSelector)s, %(clusterLabel)s="$cluster", namespace="$namespace", pod="$pod", resource="cpu"}
-        )
-      ||| % $._config;
+  sum( kube_pod_container_resource_requests{%(kubeStateMetricsSelector)s, %(clusterLabel)s="$cluster", namespace="$namespace", pod="$pod", resource="cpu"} )
+||| % $._config;
 
       local cpuLimitsQuery = std.strReplace(cpuRequestsQuery, 'requests', 'limits');
       local memRequestsQuery = std.strReplace(cpuRequestsQuery, 'cpu', 'memory');
@@ -94,7 +92,7 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'sum((sum by (%(clusterLabel)s, namespace, pod, container) ( rate(container_cpu_usage_seconds_total{%(cadvisorSelector)s, image!=""}[5m]) ) * on (%(clusterLabel)s, namespace, pod) group_left(node) topk by (%(clusterLabel)s, namespace, pod) ( 1, max by(%(clusterLabel)s, namespace, pod, node) (kube_pod_info{node!=""}) )){namespace="$namespace", pod="$pod", %(clusterLabel)s="$cluster", container!=""}) by (container)' % $._config
+            'sum((sum by (%(clusterLabel)s, namespace, pod, container) ( rate(container_cpu_usage_seconds_total{%(cadvisorSelector)s, image!="", namespace="$namespace", pod="$pod", %(clusterLabel)s="$cluster", container!=""}[5m]) ) * on (%(clusterLabel)s, namespace, pod) group_left(node) topk by (%(clusterLabel)s, namespace, pod) ( 1, max by(%(clusterLabel)s, namespace, pod, node) (kube_pod_info{node!=""}) ))) by (container)' % $._config
           )
           + prometheus.withLegendFormat('__auto'),
 

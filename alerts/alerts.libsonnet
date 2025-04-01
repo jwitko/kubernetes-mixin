@@ -1,14 +1,14 @@
 // Import individual alert definition files
+local links = import '../lib/add-runbook-links.libsonnet';
 local apps = import 'apps_alerts.libsonnet';
+local apiserver = import 'kube_apiserver.libsonnet';
+local controllerManager = import 'kube_controller_manager.libsonnet';
+local proxy = import 'kube_proxy.libsonnet';
+local scheduler = import 'kube_scheduler.libsonnet';
+local kubelet = import 'kubelet.libsonnet';
 local resource = import 'resource_alerts.libsonnet';
 local storage = import 'storage_alerts.libsonnet';
 local system = import 'system_alerts.libsonnet';
-local apiserver = import 'kube_apiserver.libsonnet';
-local kubelet = import 'kubelet.libsonnet';
-local scheduler = import 'kube_scheduler.libsonnet';
-local controllerManager = import 'kube_controller_manager.libsonnet';
-local proxy = import 'kube_proxy.libsonnet';
-local links = import '../lib/add-runbook-links.libsonnet';
 
 // Main object combining Prometheus alerts and Grafana alerts
 (apps + resource + storage + system + apiserver + kubelet + scheduler + controllerManager + proxy + links)

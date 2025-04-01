@@ -6,7 +6,7 @@ local utils = import '../lib/utils.libsonnet';
     showMultiCluster: false,
     clusterLabel: 'cluster',
     namespaceLabel: 'namespace',
-    
+
     kubeStateMetricsSelector: 'job="kube-state-metrics"',
     nodeExporterSelector: 'job="node-exporter"',
     namespaceSelector: null,
@@ -26,8 +26,8 @@ local utils = import '../lib/utils.libsonnet';
     kubeCpuOvercommitSelector: '',
 
     // --- Grafana Alert Configuration ---
-    grafanaDatasourceUid: 'P09C4D52DEC9B98E6', // Default Prometheus Datasource UID in Grafana
-    grafanaIntervalMs: 60000, // Default evaluation interval
+    grafanaDatasourceUid: 'P09C4D52DEC9B98E6',  // Default Prometheus Datasource UID in Grafana
+    grafanaIntervalMs: 60000,  // Default evaluation interval
     grafanaNoDataState: 'OK',
     grafanaExecErrState: 'Error',
     // -----------------------------------
@@ -46,7 +46,7 @@ local utils = import '../lib/utils.libsonnet';
             annotations: {
               summary: 'Cluster has overcommitted CPU resource requests.',
             },
-            "for": '10m',
+            'for': '10m',
             // Prometheus-specific part
             expr: if $._config.showMultiCluster then |||
               sum((sum by (namespace, %(clusterLabel)s) ( sum by (namespace, pod, %(clusterLabel)s) ( max by (namespace, pod, container, %(clusterLabel)s) ( kube_pod_container_resource_requests{resource="cpu",%(kubeStateMetricsSelector)s} ) * on(namespace, pod, %(clusterLabel)s) group_left() max by (namespace, pod, %(clusterLabel)s) ( kube_pod_status_phase{phase=~"Pending|Running"} == 1 ) ) )){%(ignoringOverprovisionedWorkloadSelector)s}) by (%(clusterLabel)s) - (sum(kube_node_status_allocatable{%(kubeStateMetricsSelector)s,resource="cpu"}) by (%(clusterLabel)s) - max(kube_node_status_allocatable{%(kubeStateMetricsSelector)s,resource="cpu"}) by (%(clusterLabel)s)) > 0
@@ -69,7 +69,7 @@ local utils = import '../lib/utils.libsonnet';
             annotations: {
               summary: 'Cluster has overcommitted memory resource requests.',
             },
-            "for": '10m',
+            'for': '10m',
           } +
           if $._config.showMultiCluster then {
             expr: |||
@@ -99,7 +99,7 @@ local utils = import '../lib/utils.libsonnet';
             annotations: {
               summary: 'Cluster has overcommitted CPU resource requests.',
             },
-            "for": '5m',
+            'for': '5m',
           } +
           if $._config.showMultiCluster then {
             expr: |||
@@ -131,7 +131,7 @@ local utils = import '../lib/utils.libsonnet';
             annotations: {
               summary: 'Cluster has overcommitted memory resource requests.',
             },
-            "for": '5m',
+            'for': '5m',
           } +
           if $._config.showMultiCluster then {
             expr: |||
@@ -163,7 +163,7 @@ local utils = import '../lib/utils.libsonnet';
               (kube_resourcequota{%(prefixedNamespaceSelector)s%(kubeStateMetricsSelector)s, type="hard"} > 0)
                 > 0.9 < 1
             ||| % $._config,
-            "for": '15m',
+            'for': '15m',
             labels: {
               severity: 'info',
             },
@@ -182,7 +182,7 @@ local utils = import '../lib/utils.libsonnet';
               (kube_resourcequota{%(prefixedNamespaceSelector)s%(kubeStateMetricsSelector)s, type="hard"} > 0)
                 == 1
             ||| % $._config,
-            "for": '15m',
+            'for': '15m',
             labels: {
               severity: 'info',
             },
@@ -201,7 +201,7 @@ local utils = import '../lib/utils.libsonnet';
               (kube_resourcequota{%(prefixedNamespaceSelector)s%(kubeStateMetricsSelector)s, type="hard"} > 0)
                 > 1
             ||| % $._config,
-            "for": '15m',
+            'for': '15m',
             labels: {
               severity: 'warning',
             },
@@ -220,7 +220,7 @@ local utils = import '../lib/utils.libsonnet';
               sum(increase(container_cpu_cfs_periods_total{%(cadvisorSelector)s, %(cpuThrottlingSelector)s}[5m])) without (id, metrics_path, name, image, endpoint, job, node)
                 > ( %(cpuThrottlingPercent)s / 100 )
             ||| % $._config,
-            "for": '15m',
+            'for': '15m',
             labels: {
               severity: 'info',
             },
@@ -247,9 +247,9 @@ local utils = import '../lib/utils.libsonnet';
         labels: { [k]: rule.labels[k] for k in std.objectFields(std.get(rule, 'labels', {})) },
         annotations: { [k]: rule.annotations[k] for k in std.objectFields(std.get(rule, 'annotations', {})) },
       }, $._config)
-      for rule in group.rules // Iterate over the rules
+      for rule in group.rules  // Iterate over the rules
       if std.objectHas(rule, 'alert')
     ]
-    for group in self.prometheusAlerts.groups // Iterate over self
+    for group in self.prometheusAlerts.groups  // Iterate over self
   },
 }

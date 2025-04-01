@@ -110,7 +110,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum((sum by (cluster, namespace, pod, container) ( rate(container_cpu_usage_seconds_total{job=\"kubelet\", image!=\"\"}[5m]) ) * on (cluster, namespace, pod) group_left(node) topk by (cluster, namespace, pod) ( 1, max by(cluster, namespace, pod, node) (kube_pod_info{node!=\"\"}) )){namespace=\"$namespace\", pod=\"$pod\", cluster=\"$cluster\", container!=\"\"}) by (container)",
+               "expr": "sum((sum by (cluster, namespace, pod, container) ( rate(container_cpu_usage_seconds_total{job=\"kubelet\", image!=\"\", namespace=\"$namespace\", pod=\"$pod\", cluster=\"$cluster\", container!=\"\"}[5m]) ) * on (cluster, namespace, pod) group_left(node) topk by (cluster, namespace, pod) ( 1, max by(cluster, namespace, pod, node) (kube_pod_info{node!=\"\"}) ))) by (container)",
                "legendFormat": "__auto"
             },
             {
@@ -118,7 +118,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(\n    kube_pod_container_resource_requests{job=\"kube-state-metrics\", cluster=\"$cluster\", namespace=\"$namespace\", pod=\"$pod\", resource=\"cpu\"}\n)\n",
+               "expr": "sum( kube_pod_container_resource_requests{job=\"kube-state-metrics\", cluster=\"$cluster\", namespace=\"$namespace\", pod=\"$pod\", resource=\"cpu\"} )\n",
                "legendFormat": "requests"
             },
             {
@@ -126,7 +126,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(\n    kube_pod_container_resource_limits{job=\"kube-state-metrics\", cluster=\"$cluster\", namespace=\"$namespace\", pod=\"$pod\", resource=\"cpu\"}\n)\n",
+               "expr": "sum( kube_pod_container_resource_limits{job=\"kube-state-metrics\", cluster=\"$cluster\", namespace=\"$namespace\", pod=\"$pod\", resource=\"cpu\"} )\n",
                "legendFormat": "limits"
             }
          ],
@@ -449,7 +449,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(\n    kube_pod_container_resource_requests{job=\"kube-state-metrics\", cluster=\"$cluster\", namespace=\"$namespace\", pod=\"$pod\", resource=\"memory\"}\n)\n",
+               "expr": "sum( kube_pod_container_resource_requests{job=\"kube-state-metrics\", cluster=\"$cluster\", namespace=\"$namespace\", pod=\"$pod\", resource=\"memory\"} )\n",
                "legendFormat": "requests"
             },
             {
@@ -457,7 +457,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(\n    kube_pod_container_resource_limits{job=\"kube-state-metrics\", cluster=\"$cluster\", namespace=\"$namespace\", pod=\"$pod\", resource=\"memory\"}\n)\n",
+               "expr": "sum( kube_pod_container_resource_limits{job=\"kube-state-metrics\", cluster=\"$cluster\", namespace=\"$namespace\", pod=\"$pod\", resource=\"memory\"} )\n",
                "legendFormat": "limits"
             }
          ],

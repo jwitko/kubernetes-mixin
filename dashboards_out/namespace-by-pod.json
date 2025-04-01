@@ -61,7 +61,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum (\n    rate(container_network_receive_bytes_total{cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n  * on (cluster,namespace,pod) group_left ()\n    topk by (cluster,namespace,pod) (\n      1,\n      max by (cluster,namespace,pod) (kube_pod_info{host_network=\"false\"})\n    )\n)\n",
+               "expr": "sum ( rate(container_network_receive_bytes_total{cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval]) * on (cluster,namespace,pod) group_left () topk by (cluster,namespace,pod) ( 1, max by (cluster,namespace,pod) (kube_pod_info{host_network=\"false\"}) ) )\n",
                "legendFormat": "__auto"
             }
          ],
@@ -114,7 +114,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum (\n    rate(container_network_transmit_bytes_total{cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n  * on (cluster,namespace,pod) group_left ()\n    topk by (cluster,namespace,pod) (\n      1,\n      max by (cluster,namespace,pod) (kube_pod_info{host_network=\"false\"})\n    )\n)\n",
+               "expr": "sum ( rate(container_network_transmit_bytes_total{cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval]) * on (cluster,namespace,pod) group_left () topk by (cluster,namespace,pod) ( 1, max by (cluster,namespace,pod) (kube_pod_info{host_network=\"false\"}) ) )\n",
                "legendFormat": "__auto"
             }
          ],
@@ -185,7 +185,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum by (pod) (\n    rate(container_network_receive_bytes_total{cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n  * on (cluster,namespace,pod) group_left ()\n    topk by (cluster,namespace,pod) (\n      1,\n      max by (cluster,namespace,pod) (kube_pod_info{host_network=\"false\"})\n    )\n)\n",
+               "expr": "sum by (pod) ( rate(container_network_receive_bytes_total{cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval]) * on (cluster,namespace,pod) group_left () topk by (cluster,namespace,pod) ( 1, max by (cluster,namespace,pod) (kube_pod_info{host_network=\"false\"}) ) )\n",
                "format": "table",
                "instant": true
             },
@@ -194,7 +194,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum by (pod) (\n    rate(container_network_transmit_bytes_total{cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n  * on (cluster,namespace,pod) group_left ()\n    topk by (cluster,namespace,pod) (\n      1,\n      max by (cluster,namespace,pod) (kube_pod_info{host_network=\"false\"})\n    )\n)\n",
+               "expr": "sum by (pod) ( rate(container_network_transmit_bytes_total{cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval]) * on (cluster,namespace,pod) group_left () topk by (cluster,namespace,pod) ( 1, max by (cluster,namespace,pod) (kube_pod_info{host_network=\"false\"}) ) )\n",
                "format": "table",
                "instant": true
             },
@@ -203,7 +203,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum by (pod) (\n    rate(container_network_receive_packets_total{cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n  * on (cluster,namespace,pod) group_left ()\n    topk by (cluster,namespace,pod) (\n      1,\n      max by (cluster,namespace,pod) (kube_pod_info{host_network=\"false\"})\n    )\n)\n",
+               "expr": "sum by (pod) ( rate(container_network_receive_packets_total{cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval]) * on (cluster,namespace,pod) group_left () topk by (cluster,namespace,pod) ( 1, max by (cluster,namespace,pod) (kube_pod_info{host_network=\"false\"}) ) )\n",
                "format": "table",
                "instant": true
             },
@@ -212,7 +212,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum by (pod) (\n    rate(container_network_transmit_packets_total{cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n  * on (cluster,namespace,pod) group_left ()\n    topk by (cluster,namespace,pod) (\n      1,\n      max by (cluster,namespace,pod) (kube_pod_info{host_network=\"false\"})\n    )\n)\n",
+               "expr": "sum by (pod) ( rate(container_network_transmit_packets_total{cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval]) * on (cluster,namespace,pod) group_left () topk by (cluster,namespace,pod) ( 1, max by (cluster,namespace,pod) (kube_pod_info{host_network=\"false\"}) ) )\n",
                "format": "table",
                "instant": true
             },
@@ -221,7 +221,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum by (pod) (\n    rate(container_network_receive_packets_dropped_total{cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n  * on (cluster,namespace,pod) group_left ()\n    topk by (cluster,namespace,pod) (\n      1,\n      max by (cluster,namespace,pod) (kube_pod_info{host_network=\"false\"})\n    )\n)\n",
+               "expr": "sum by (pod) ( rate(container_network_receive_packets_dropped_total{cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval]) * on (cluster,namespace,pod) group_left () topk by (cluster,namespace,pod) ( 1, max by (cluster,namespace,pod) (kube_pod_info{host_network=\"false\"}) ) )\n",
                "format": "table",
                "instant": true
             },
@@ -230,7 +230,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum by (pod) (\n    rate(container_network_transmit_packets_dropped_total{cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n  * on (cluster,namespace,pod) group_left ()\n    topk by (cluster,namespace,pod) (\n      1,\n      max by (cluster,namespace,pod) (kube_pod_info{host_network=\"false\"})\n    )\n)\n",
+               "expr": "sum by (pod) ( rate(container_network_transmit_packets_dropped_total{cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval]) * on (cluster,namespace,pod) group_left () topk by (cluster,namespace,pod) ( 1, max by (cluster,namespace,pod) (kube_pod_info{host_network=\"false\"}) ) )\n",
                "format": "table",
                "instant": true
             }
@@ -324,7 +324,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum by (pod) (\n    rate(container_network_receive_bytes_total{cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n  * on (cluster,namespace,pod) group_left ()\n    topk by (cluster,namespace,pod) (\n      1,\n      max by (cluster,namespace,pod) (kube_pod_info{host_network=\"false\"})\n    )\n)\n",
+               "expr": "sum by (pod) ( rate(container_network_receive_bytes_total{cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval]) * on (cluster,namespace,pod) group_left () topk by (cluster,namespace,pod) ( 1, max by (cluster,namespace,pod) (kube_pod_info{host_network=\"false\"}) ) )\n",
                "legendFormat": "__auto"
             }
          ],
@@ -370,7 +370,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum by (pod) (\n    rate(container_network_transmit_bytes_total{cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n  * on (cluster,namespace,pod) group_left ()\n    topk by (cluster,namespace,pod) (\n      1,\n      max by (cluster,namespace,pod) (kube_pod_info{host_network=\"false\"})\n    )\n)\n",
+               "expr": "sum by (pod) ( rate(container_network_transmit_bytes_total{cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval]) * on (cluster,namespace,pod) group_left () topk by (cluster,namespace,pod) ( 1, max by (cluster,namespace,pod) (kube_pod_info{host_network=\"false\"}) ) )\n",
                "legendFormat": "__auto"
             }
          ],
@@ -416,7 +416,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum by (pod) (\n    rate(container_network_receive_packets_total{cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n  * on (cluster,namespace,pod) group_left ()\n    topk by (cluster,namespace,pod) (\n      1,\n      max by (cluster,namespace,pod) (kube_pod_info{host_network=\"false\"})\n    )\n)\n",
+               "expr": "sum by (pod) ( rate(container_network_receive_packets_total{cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval]) * on (cluster,namespace,pod) group_left () topk by (cluster,namespace,pod) ( 1, max by (cluster,namespace,pod) (kube_pod_info{host_network=\"false\"}) ) )\n",
                "legendFormat": "__auto"
             }
          ],
@@ -462,7 +462,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum by (pod) (\n    rate(container_network_transmit_packets_total{cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n  * on (cluster,namespace,pod) group_left ()\n    topk by (cluster,namespace,pod) (\n      1,\n      max by (cluster,namespace,pod) (kube_pod_info{host_network=\"false\"})\n    )\n)\n",
+               "expr": "sum by (pod) ( rate(container_network_transmit_packets_total{cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval]) * on (cluster,namespace,pod) group_left () topk by (cluster,namespace,pod) ( 1, max by (cluster,namespace,pod) (kube_pod_info{host_network=\"false\"}) ) )\n",
                "legendFormat": "__auto"
             }
          ],
@@ -508,7 +508,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum by (pod) (\n    rate(container_network_receive_packets_dropped_total{cluster=\"$cluster\",namespace!=\"\"}[$__rate_interval])\n  * on (cluster,namespace,pod) group_left ()\n    topk by (cluster,namespace,pod) (\n      1,\n      max by (cluster,namespace,pod) (kube_pod_info{host_network=\"false\"})\n    )\n)\n",
+               "expr": "sum by (pod) ( rate(container_network_receive_packets_dropped_total{cluster=\"$cluster\",namespace!=\"\"}[$__rate_interval]) * on (cluster,namespace,pod) group_left () topk by (cluster,namespace,pod) ( 1, max by (cluster,namespace,pod) (kube_pod_info{host_network=\"false\"}) ) )\n",
                "legendFormat": "__auto"
             }
          ],
@@ -554,7 +554,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum by (pod) (\n    rate(container_network_transmit_packets_dropped_total{cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval])\n  * on (cluster,namespace,pod) group_left ()\n    topk by (cluster,namespace,pod) (\n      1,\n      max by (cluster,namespace,pod) (kube_pod_info{host_network=\"false\"})\n    )\n)\n",
+               "expr": "sum by (pod) ( rate(container_network_transmit_packets_dropped_total{cluster=\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval]) * on (cluster,namespace,pod) group_left () topk by (cluster,namespace,pod) ( 1, max by (cluster,namespace,pod) (kube_pod_info{host_network=\"false\"}) ) )\n",
                "legendFormat": "__auto"
             }
          ],

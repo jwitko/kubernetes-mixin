@@ -92,35 +92,17 @@ local var = g.dashboard.variable;
           tsPanel.new('Volume Space Usage')
           + tsPanel.standardOptions.withUnit('bytes')
           + tsPanel.queryOptions.withTargets([
-            prometheus.new('${datasource}', |||
-              (
-                sum without(instance, node) (topk(1, (kubelet_volume_stats_capacity_bytes{%(clusterLabel)s="$cluster", %(kubeletSelector)s, namespace="$namespace", persistentvolumeclaim="$volume"})))
-                -
-                sum without(instance, node) (topk(1, (kubelet_volume_stats_available_bytes{%(clusterLabel)s="$cluster", %(kubeletSelector)s, namespace="$namespace", persistentvolumeclaim="$volume"})))
-              )
-            ||| % $._config)
+            prometheus.new('${datasource}', '( sum without(instance, node) (topk(1, (kubelet_volume_stats_capacity_bytes{%(clusterLabel)s="$cluster", %(kubeletSelector)s, namespace="$namespace", persistentvolumeclaim="$volume"}))) - sum without(instance, node) (topk(1, (kubelet_volume_stats_available_bytes{%(clusterLabel)s="$cluster", %(kubeletSelector)s, namespace="$namespace", persistentvolumeclaim="$volume"}))) )' % $._config)
             + prometheus.withLegendFormat('Used Space'),
 
-            prometheus.new('${datasource}', |||
-              sum without(instance, node) (topk(1, (kubelet_volume_stats_available_bytes{%(clusterLabel)s="$cluster", %(kubeletSelector)s, namespace="$namespace", persistentvolumeclaim="$volume"})))
-            ||| % $._config)
+            prometheus.new('${datasource}', 'sum without(instance, node) (topk(1, (kubelet_volume_stats_available_bytes{%(clusterLabel)s="$cluster", %(kubeletSelector)s, namespace="$namespace", persistentvolumeclaim="$volume"})))' % $._config)
             + prometheus.withLegendFormat('Free Space'),
           ]),
         gaugeUsage:
           gaugePanel(
             'Volume Space Usage',
             'percent',
-            |||
-              max without(instance,node) (
-              (
-                topk(1, kubelet_volume_stats_capacity_bytes{%(clusterLabel)s="$cluster", %(kubeletSelector)s, namespace="$namespace", persistentvolumeclaim="$volume"})
-                -
-                topk(1, kubelet_volume_stats_available_bytes{%(clusterLabel)s="$cluster", %(kubeletSelector)s, namespace="$namespace", persistentvolumeclaim="$volume"})
-              )
-              /
-              topk(1, kubelet_volume_stats_capacity_bytes{%(clusterLabel)s="$cluster", %(kubeletSelector)s, namespace="$namespace", persistentvolumeclaim="$volume"})
-              * 100)
-            ||| % $._config
+            'max without(instance,node) ( ( topk(1, kubelet_volume_stats_capacity_bytes{%(clusterLabel)s="$cluster", %(kubeletSelector)s, namespace="$namespace", persistentvolumeclaim="$volume"}) - topk(1, kubelet_volume_stats_available_bytes{%(clusterLabel)s="$cluster", %(kubeletSelector)s, namespace="$namespace", persistentvolumeclaim="$volume"}) ) / topk(1, kubelet_volume_stats_capacity_bytes{%(clusterLabel)s="$cluster", %(kubeletSelector)s, namespace="$namespace", persistentvolumeclaim="$volume"}) * 100)' % $._config
           )
           + gauge.standardOptions.withMin(0)
           + gauge.standardOptions.withMax(100)
@@ -146,26 +128,14 @@ local var = g.dashboard.variable;
             prometheus.new('${datasource}', 'sum without(instance, node) (topk(1, (kubelet_volume_stats_inodes_used{%(clusterLabel)s="$cluster", %(kubeletSelector)s, namespace="$namespace", persistentvolumeclaim="$volume"})))' % $._config)
             + prometheus.withLegendFormat('Used inodes'),
 
-            prometheus.new('${datasource}', |||
-              (
-                sum without(instance, node) (topk(1, (kubelet_volume_stats_inodes{%(clusterLabel)s="$cluster", %(kubeletSelector)s, namespace="$namespace", persistentvolumeclaim="$volume"})))
-                -
-                sum without(instance, node) (topk(1, (kubelet_volume_stats_inodes_used{%(clusterLabel)s="$cluster", %(kubeletSelector)s, namespace="$namespace", persistentvolumeclaim="$volume"})))
-              )
-            ||| % $._config)
+            prometheus.new('${datasource}', '( sum without(instance, node) (topk(1, (kubelet_volume_stats_inodes{%(clusterLabel)s="$cluster", %(kubeletSelector)s, namespace="$namespace", persistentvolumeclaim="$volume"}))) - sum without(instance, node) (topk(1, (kubelet_volume_stats_inodes_used{%(clusterLabel)s="$cluster", %(kubeletSelector)s, namespace="$namespace", persistentvolumeclaim="$volume"}))) )' % $._config)
             + prometheus.withLegendFormat('Free inodes'),
           ]),
         gaugeInodes:
           gaugePanel(
             'Volume inodes Usage',
             'percent',
-            |||
-              max without(instance,node) (
-              topk(1, kubelet_volume_stats_inodes_used{%(clusterLabel)s="$cluster", %(kubeletSelector)s, namespace="$namespace", persistentvolumeclaim="$volume"})
-              /
-              topk(1, kubelet_volume_stats_inodes{%(clusterLabel)s="$cluster", %(kubeletSelector)s, namespace="$namespace", persistentvolumeclaim="$volume"})
-              * 100)
-            ||| % $._config
+            'max without(instance,node) ( topk(1, kubelet_volume_stats_inodes_used{%(clusterLabel)s="$cluster", %(kubeletSelector)s, namespace="$namespace", persistentvolumeclaim="$volume"}) / topk(1, kubelet_volume_stats_inodes{%(clusterLabel)s="$cluster", %(kubeletSelector)s, namespace="$namespace", persistentvolumeclaim="$volume"}) * 100)' % $._config
           )
           + gauge.standardOptions.withMin(0)
           + gauge.standardOptions.withMax(100)

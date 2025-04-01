@@ -38,9 +38,9 @@
       join_labels: if std.objectHas(config, '%ss_join_labels' % kind) then config['%ss_join_labels' % kind] else [],
       // since the label 'job' is reserved, the resource with kind Job uses the label 'job_name' instead
       on_labels: [
-        '%s' % (if kind == 'job' then 'job_name' else kind), 
+        '%s' % (if kind == 'job' then 'job_name' else kind),
         '%s' % config.namespaceLabel,
-        if std.objectHas(config, 'clusterLabel') then '%s' % config.clusterLabel else 'cluster'
+        if std.objectHas(config, 'clusterLabel') then '%s' % config.clusterLabel else 'cluster',
       ],
       metric: 'kube_%s_labels' % kind,
     };
@@ -64,16 +64,16 @@
   // if showMultiCluster is true in config, return the string, otherwise return an empty string
   // With a fallback when the field doesn't exist
   ifShowMultiCluster(config, string)::
-    if std.objectHas(config, 'showMultiCluster') && config.showMultiCluster 
-    then string 
+    if std.objectHas(config, 'showMultiCluster') && config.showMultiCluster
+    then string
     else '',
 
   // Function to create the Grafana alert data structure boilerplate
   makeGrafanaAlertBoilerplate(promRule, config)::
-    local evaluatorType = 'gt'; // Default, potentially extract from promRule.expr later if complex parsing is desired
-    local evaluatorThreshold = 0; // Default, potentially extract from promRule.expr later
-    local reducerType = 'last'; // Default, may need adjustment based on query
-    
+    local evaluatorType = 'gt';  // Default, potentially extract from promRule.expr later if complex parsing is desired
+    local evaluatorThreshold = 0;  // Default, potentially extract from promRule.expr later
+    local reducerType = 'last';  // Default, may need adjustment based on query
+
     // Ensure config has required values with defaults
     local configWithDefaults = config {
       grafanaDatasourceUid: if std.objectHas(config, 'grafanaDatasourceUid') then config.grafanaDatasourceUid else 'P09C4D52DEC9B98E6',
@@ -99,7 +99,7 @@
             editorMode: 'code',
             // Force evaluation of the original Prometheus expr string HERE
             local evaluatedExpr = promRule.expr,
-            expr: evaluatedExpr, // Assign the evaluated string
+            expr: evaluatedExpr,  // Assign the evaluated string
             intervalMs: configWithDefaults.grafanaIntervalMs,
             legendFormat: '__auto',
             maxDataPoints: 43200,
@@ -112,7 +112,7 @@
             from: 0,
             to: 0,
           },
-          datasourceUid: '-100', // Expression datasource
+          datasourceUid: '-100',  // Expression datasource
           model: {
             conditions: [
               {
@@ -133,7 +133,7 @@
               },
             ],
             datasource: { type: '__expr__', uid: '-100' },
-            expression: 'A', // Reduce expression
+            expression: 'A',  // Reduce expression
             intervalMs: configWithDefaults.grafanaIntervalMs,
             maxDataPoints: 43200,
             reducer: reducerType,
@@ -148,14 +148,14 @@
             from: 0,
             to: 0,
           },
-          datasourceUid: '-100', // Expression datasource
+          datasourceUid: '-100',  // Expression datasource
           model: {
             conditions: [
               {
                 evaluator: {
                   // This threshold comparison happens in the expression below
-                  params: [0], // Placeholder, actual comparison in math expression
-                  type: evaluatorType, // Keep original type for reference if needed
+                  params: [0],  // Placeholder, actual comparison in math expression
+                  type: evaluatorType,  // Keep original type for reference if needed
                 },
                 operator: {
                   type: 'and',
@@ -172,13 +172,13 @@
             datasource: { name: 'Expression', type: '__expr__', uid: '__expr__' },
             // Construct the final math expression (e.g., $B > 0)
             // Assuming evaluatorThreshold/Type reflect the simple comparison for now
-            expression: 
+            expression:
               if evaluatorType == 'gt' then '$B > %f' % evaluatorThreshold
               else if evaluatorType == 'lt' then '$B < %f' % evaluatorThreshold
               else if evaluatorType == 'eq' then '$B == %f' % evaluatorThreshold
               else if evaluatorType == 'neq' then '$B != %f' % evaluatorThreshold
               // Add more complex parsing/handling here if needed based on promRule.expr
-              else '$B > 0', // Default condition
+              else '$B > 0',  // Default condition
             intervalMs: configWithDefaults.grafanaIntervalMs,
             maxDataPoints: 43200,
             type: 'math',
@@ -186,27 +186,26 @@
         },
       ],
       // Add uid, no_data_state, exec_err_state from config if they exist
-      uid: '' // uid seems empty in the example, can be generated if needed
-             + (if std.objectHas(config, 'grafanaNoDataState') then { no_data_state: config.grafanaNoDataState } else {}) 
-             + (if std.objectHas(config, 'grafanaExecErrState') then { exec_err_state: config.grafanaExecErrState } else {})
+      uid: ''  // uid seems empty in the example, can be generated if needed
+           + (if std.objectHas(config, 'grafanaNoDataState') then { no_data_state: config.grafanaNoDataState } else {})
+           + (if std.objectHas(config, 'grafanaExecErrState') then { exec_err_state: config.grafanaExecErrState } else {}),
     };
 
     // Construct the final Grafana rule object
     {
-      expr: '', // Outer expr is empty in Grafana format
-      'for': std.get(promRule, 'for', '5m'), // Copy 'for' duration
-      labels: std.get(promRule, 'labels', {}), // Copy labels
-      
+      expr: '',  // Outer expr is empty in Grafana format
+      'for': std.get(promRule, 'for', '5m'),  // Copy 'for' duration
+      labels: std.get(promRule, 'labels', {}),  // Copy labels
+
       // Force evaluation of annotations in the current context before copying
       // Create a new object by iterating through the keys of the original annotations
       // Accessing promRule.annotations[key] forces evaluation in the calling context
       local evaluatedAnnotations = {
-         [key]: promRule.annotations[key]
-         for key in std.objectFields(std.get(promRule, 'annotations', {}))
+        [key]: promRule.annotations[key]
+        for key in std.objectFields(std.get(promRule, 'annotations', {}))
       },
-      annotations: evaluatedAnnotations, // Assign the fully evaluated annotations
-      
-      grafana_alert: grafanaAlertData, // Embed the Grafana-specific data
-    }
-  ,
+      annotations: evaluatedAnnotations,  // Assign the fully evaluated annotations
+
+      grafana_alert: grafanaAlertData,  // Embed the Grafana-specific data
+    },
 }

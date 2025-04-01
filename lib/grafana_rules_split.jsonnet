@@ -13,7 +13,7 @@ local config = mixin._config {
 };
 
 // Function to remove newlines and extra whitespace from expressions
-local cleanExpr(expr) = 
+local cleanExpr(expr) =
   std.strReplace(std.strReplace(expr, '\n', ' '), '  ', ' ');
 
 // Function to convert a Prometheus recording rule to Grafana recording rule format
@@ -54,4 +54,4 @@ local compactJSON(json) =
   }))  // Compact the JSON output
   for group in mixin.prometheusRules.groups
   if std.length([rule for rule in group.rules if std.objectHas(rule, 'record')]) > 0  // Only include groups that have recording rules
-} 
+}

@@ -284,7 +284,7 @@ local utils = import '../lib/utils.libsonnet';
   // Add Grafana alerts contribution
   _grafanaAlertsContribution+:: {
     local kubeletPrometheusRules = $.prometheusAlerts.groups[0].rules,
-    
+
     groups+: [
       {
         name: 'kubernetes-system-kubelet',
