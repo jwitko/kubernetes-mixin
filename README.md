@@ -282,3 +282,24 @@ While the community has not yet fully agreed on alert severities and their to be
 ## Note
 
 You can use the external tool call [prom-metrics-check](https://github.com/ContainerSolutions/prom-metrics-check) to validate the created dashboards. This tool allows you to check if the metrics installed and used in Grafana dashboards exist in the Prometheus instance. Please have a look at https://github.com/ContainerSolutions/prom-metrics-check.
+
+### Handling newlines in PromQL queries
+
+The kubernetes-mixin project now includes built-in support for ensuring PromQL queries in the generated dashboards don't include unwanted newline characters. This is important because newlines in JSON-encoded PromQL queries can cause issues with Grafana dashboards, resulting in 500 errors and parsing failures.
+
+The process works as follows:
+
+1. When generating dashboards with `make dashboards_out`, a python script automatically runs to remove any newlines from PromQL expressions in the generated JSON files.
+2. This happens transparently as part of the normal build process.
+
+If you need to manually clean up newlines in existing dashboard files, you can run:
+
+```bash
+python3 remove_all_newlines.py
+```
+
+This script recursively processes all JSON files in the `dashboards_out` directory, removing newlines from "expr" fields while maintaining valid JSON structure.
+
+#### Customizing newline removal
+
+If you want to customize how newlines are handled, you can modify the `remove_all_newlines.py` script. It uses a simple regex-based approach to strip newlines while preserving the overall query structure.

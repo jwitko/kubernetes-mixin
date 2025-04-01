@@ -22,7 +22,12 @@ GRAFANA_RULES_OUT_DIR ?=grafana_rules_out
 all: fmt generate lint test
 
 .PHONY: generate
-generate: prometheus_alerts.yaml prometheus_rules.yaml $(OUT_DIR) $(GRAFANA_ALERTS_OUT_DIR) $(GRAFANA_RULES_OUT_DIR)
+generate: prometheus_alerts.yaml prometheus_rules.yaml $(OUT_DIR) $(GRAFANA_ALERTS_OUT_DIR) $(GRAFANA_RULES_OUT_DIR) cleanup-dashboards
+
+.PHONY: cleanup-dashboards
+cleanup-dashboards: $(OUT_DIR)
+	@echo "Removing newlines from dashboard expressions..."
+	@python3 remove_all_newlines.py
 
 $(JSONNET_VENDOR): $(JB_BIN) jsonnetfile.json
 	$(JB_BIN) install
