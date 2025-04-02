@@ -5,9 +5,110 @@ import os
 import re
 import glob
 
+def is_balanced_parentheses(expr):
+    """
+    Check if parentheses in the expression are balanced.
+    Returns True if balanced, False otherwise.
+    """
+    stack = []
+    for char in expr:
+        if char == '(':
+            stack.append(char)
+        elif char == ')':
+            if not stack:
+                return False
+            stack.pop()
+    
+    return len(stack) == 0
+
+def fix_misplaced_filters(expr):
+    """
+    Fix PromQL expressions where filters like {cluster="$cluster"} are incorrectly
+    positioned after closing parentheses by moving them inside the appropriate subexpression.
+    """
+    # Pattern to match incorrectly positioned filter expressions after closing parentheses
+    # For example: sum((... some expression ...)){cluster="$cluster"} by (namespace)
+    pattern = r'\)\s*(\{[^}]+\})\s*(by|group_by|without|offset|@|\[)'
+    
+    # If the pattern exists, we need to fix it
+    if re.search(pattern, expr):
+        # Find the deepest nested closing parenthesis before the filter
+        parts = re.split(pattern, expr, 1)
+        if len(parts) >= 3:
+            before_filter = parts[0]
+            filter_expr = parts[1]
+            after_filter = parts[2:]
+            
+            # Find the matching opening parenthesis for the last closing parenthesis
+            last_closing_index = before_filter.rindex(')')
+            stack = []
+            opening_index = -1
+            
+            for i in range(last_closing_index, -1, -1):
+                if before_filter[i] == ')':
+                    stack.append(i)
+                elif before_filter[i] == '(' and stack:
+                    stack.pop()
+                    if not stack:
+                        opening_index = i
+                        break
+            
+            if opening_index >= 0:
+                # Reconstruct the expression with the filter moved inside
+                expr_parts = []
+                expr_parts.append(before_filter[:opening_index+1])  # Up to and including the opening parenthesis
+                
+                # Now we need to find the first metric or function after the opening parenthesis
+                # and insert the filter there
+                inner_expr = before_filter[opening_index+1:last_closing_index]
+                
+                # Find the first metric or function - it might already have a filter
+                metric_pattern = r'([a-zA-Z_:][a-zA-Z0-9_:]*)\s*(\{[^}]*\})?'
+                metric_match = re.search(metric_pattern, inner_expr)
+                
+                if metric_match:
+                    metric_name = metric_match.group(1)
+                    existing_filter = metric_match.group(2) or ''
+                    
+                    if existing_filter:
+                        # Merge the filters by combining their contents
+                        new_filter = merge_filters(existing_filter, filter_expr)
+                        inner_expr = inner_expr.replace(existing_filter, new_filter, 1)
+                    else:
+                        # Insert the filter after the metric name
+                        inner_expr = inner_expr.replace(metric_name, metric_name + filter_expr, 1)
+                
+                expr_parts.append(inner_expr)
+                expr_parts.append(')')  # Close the parenthesis
+                
+                # Add the remainder of the expression after the filter
+                expr_parts.append(' ' + ' '.join(after_filter))
+                
+                return ''.join(expr_parts)
+    
+    return expr
+
+def merge_filters(filter1, filter2):
+    """
+    Merge two PromQL filters by combining their label matchers.
+    Example: {a="1"} and {b="2"} become {a="1",b="2"}
+    """
+    # Extract the contents of each filter (remove the braces)
+    content1 = filter1.strip()[1:-1]
+    content2 = filter2.strip()[1:-1]
+    
+    # Combine the contents
+    if content1 and content2:
+        return '{' + content1 + ',' + content2 + '}'
+    elif content1:
+        return '{' + content1 + '}'
+    else:
+        return '{' + content2 + '}'
+
 def remove_newlines_from_expr(json_obj):
     """
     Recursively traverse the JSON object and remove newlines from "expr" fields.
+    Also ensures parentheses are balanced and fixes misplaced filters.
     """
     modified = False
     
@@ -18,6 +119,25 @@ def remove_newlines_from_expr(json_obj):
                 new_value = re.sub(r'\s*\n\s*', ' ', value)
                 # Normalize spaces (no double spaces)
                 new_value = re.sub(r'\s+', ' ', new_value)
+                
+                # Fix misplaced filters
+                fixed_value = fix_misplaced_filters(new_value)
+                if fixed_value != new_value:
+                    print(f"Fixed misplaced filter in expression: {new_value[:50]}...")
+                    new_value = fixed_value
+                    modified = True
+                
+                # Check if parentheses are balanced
+                if not is_balanced_parentheses(new_value):
+                    print(f"Warning: Unbalanced parentheses detected in expression: {new_value[:50]}...")
+                    # Try to fix by counting and adding missing closing parentheses
+                    open_count = new_value.count('(')
+                    close_count = new_value.count(')')
+                    if open_count > close_count:
+                        # Add missing closing parentheses
+                        new_value += ')' * (open_count - close_count)
+                        print(f"Fixed by adding {open_count - close_count} closing parentheses")
+                        modified = True
                 
                 if new_value != value:
                     json_obj[key] = new_value
@@ -48,7 +168,7 @@ def process_dashboard_file(file_path):
         if modified:
             with open(file_path, 'w', encoding='utf-8') as f:
                 json.dump(dashboard, f, indent=2)
-            print(f"✓ Newlines removed from expressions in {file_path}")
+            print(f"✓ Changes made to expressions in {file_path}")
         else:
             print(f"- No changes needed in {file_path}")
         

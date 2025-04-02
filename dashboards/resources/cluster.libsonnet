@@ -80,7 +80,7 @@ local var = g.dashboard.variable;
         statPanel(
           'CPU Utilisation',
           'percentunit',
-          '(avg by (%(clusterLabel)s) ( (avg by (%(clusterLabel)s, node) ( sum without (mode) ( rate(node_cpu_seconds_total{mode!="idle",mode!="iowait",mode!="steal",%(nodeExporterSelector)s}[5m]) ) )) )){%(clusterLabel)s="$cluster"}' % $._config
+          'avg by (%(clusterLabel)s) ( avg by (%(clusterLabel)s, node) ( sum without (mode) ( rate(node_cpu_seconds_total{mode!="idle",mode!="iowait",mode!="steal",%(nodeExporterSelector)s,%(clusterLabel)s="$cluster"}[5m]) ) ) )' % $._config
         )
         + stat.gridPos.withW(4)
         + stat.gridPos.withH(3),
@@ -88,7 +88,7 @@ local var = g.dashboard.variable;
         statPanel(
           'CPU Requests Commitment',
           'percentunit',
-          'sum((sum by (namespace, %(clusterLabel)s) ( sum by (namespace, pod, %(clusterLabel)s) ( max by (namespace, pod, container, %(clusterLabel)s) ( kube_pod_container_resource_requests{resource="cpu",%(kubeStateMetricsSelector)s} ) * on(namespace, pod, %(clusterLabel)s) group_left() max by (namespace, pod, %(clusterLabel)s) ( kube_pod_status_phase{phase=~"Pending|Running"} == 1 ) ) )){%(clusterLabel)s="$cluster"}) / sum(kube_node_status_allocatable{%(kubeStateMetricsSelector)s,resource="cpu",%(clusterLabel)s="$cluster"})' % $._config
+          'sum(sum by (namespace, %(clusterLabel)s) ( sum by (namespace, pod, %(clusterLabel)s) ( max by (namespace, pod, container, %(clusterLabel)s) ( kube_pod_container_resource_requests{resource="cpu",%(kubeStateMetricsSelector)s,%(clusterLabel)s="$cluster"} ) * on(namespace, pod, %(clusterLabel)s) group_left() max by (namespace, pod, %(clusterLabel)s) ( kube_pod_status_phase{phase=~"Pending|Running"} == 1 ) ) )) / sum(kube_node_status_allocatable{%(kubeStateMetricsSelector)s,resource="cpu",%(clusterLabel)s="$cluster"})' % $._config
         )
         + stat.gridPos.withW(4)
         + stat.gridPos.withH(3),
@@ -96,7 +96,7 @@ local var = g.dashboard.variable;
         statPanel(
           'CPU Limits Commitment',
           'percentunit',
-          'sum((sum by (namespace, %(clusterLabel)s) ( sum by (namespace, pod, %(clusterLabel)s) ( max by (namespace, pod, container, %(clusterLabel)s) ( kube_pod_container_resource_limits{resource="cpu",%(kubeStateMetricsSelector)s} ) * on(namespace, pod, %(clusterLabel)s) group_left() max by (namespace, pod, %(clusterLabel)s) ( kube_pod_status_phase{phase=~"Pending|Running"} == 1 ) ) )){%(clusterLabel)s="$cluster"}) / sum(kube_node_status_allocatable{%(kubeStateMetricsSelector)s,resource="cpu",%(clusterLabel)s="$cluster"})' % $._config
+          'sum(sum by (namespace, %(clusterLabel)s) ( sum by (namespace, pod, %(clusterLabel)s) ( max by (namespace, pod, container, %(clusterLabel)s) ( kube_pod_container_resource_limits{resource="cpu",%(kubeStateMetricsSelector)s,%(clusterLabel)s="$cluster"} ) * on(namespace, pod, %(clusterLabel)s) group_left() max by (namespace, pod, %(clusterLabel)s) ( kube_pod_status_phase{phase=~"Pending|Running"} == 1 ) ) )) / sum(kube_node_status_allocatable{%(kubeStateMetricsSelector)s,resource="cpu",%(clusterLabel)s="$cluster"})' % $._config
         )
         + stat.gridPos.withW(4)
         + stat.gridPos.withH(3),
@@ -104,7 +104,7 @@ local var = g.dashboard.variable;
         statPanel(
           'Memory Utilisation',
           'percentunit',
-          '1 - sum((sum( node_memory_MemAvailable_bytes{%(nodeExporterSelector)s} or ( node_memory_Buffers_bytes{%(nodeExporterSelector)s} + node_memory_Cached_bytes{%(nodeExporterSelector)s} + node_memory_MemFree_bytes{%(nodeExporterSelector)s} + node_memory_Slab_bytes{%(nodeExporterSelector)s} ) ) by (%(clusterLabel)s)){%(clusterLabel)s="$cluster"}) / sum(node_memory_MemTotal_bytes{%(nodeExporterSelector)s,%(clusterLabel)s="$cluster"})' % $._config
+          '1 - sum by (%(clusterLabel)s) (sum( node_memory_MemAvailable_bytes{%(nodeExporterSelector)s,%(clusterLabel)s="$cluster"} or ( node_memory_Buffers_bytes{%(nodeExporterSelector)s,%(clusterLabel)s="$cluster"} + node_memory_Cached_bytes{%(nodeExporterSelector)s,%(clusterLabel)s="$cluster"} + node_memory_MemFree_bytes{%(nodeExporterSelector)s,%(clusterLabel)s="$cluster"} + node_memory_Slab_bytes{%(nodeExporterSelector)s,%(clusterLabel)s="$cluster"} ) )) / sum(node_memory_MemTotal_bytes{%(nodeExporterSelector)s,%(clusterLabel)s="$cluster"})' % $._config
         )
         + stat.gridPos.withW(4)
         + stat.gridPos.withH(3),
@@ -112,7 +112,7 @@ local var = g.dashboard.variable;
         statPanel(
           'Memory Requests Commitment',
           'percentunit',
-          'sum((sum by (namespace, %(clusterLabel)s) ( sum by (namespace, pod, %(clusterLabel)s) ( max by (namespace, pod, container, %(clusterLabel)s) ( kube_pod_container_resource_requests{resource="memory",%(kubeStateMetricsSelector)s} ) * on(namespace, pod, %(clusterLabel)s) group_left() max by (namespace, pod, %(clusterLabel)s) ( kube_pod_status_phase{phase=~"Pending|Running"} == 1 ) ) )){%(clusterLabel)s="$cluster"}) / sum(kube_node_status_allocatable{%(kubeStateMetricsSelector)s,resource="memory",%(clusterLabel)s="$cluster"})' % $._config
+          'sum(sum by (namespace, %(clusterLabel)s) ( sum by (namespace, pod, %(clusterLabel)s) ( max by (namespace, pod, container, %(clusterLabel)s) ( kube_pod_container_resource_requests{resource="memory",%(kubeStateMetricsSelector)s,%(clusterLabel)s="$cluster"} ) * on(namespace, pod, %(clusterLabel)s) group_left() max by (namespace, pod, %(clusterLabel)s) ( kube_pod_status_phase{phase=~"Pending|Running"} == 1 ) ) )) / sum(kube_node_status_allocatable{%(kubeStateMetricsSelector)s,resource="memory",%(clusterLabel)s="$cluster"})' % $._config
         )
         + stat.gridPos.withW(4)
         + stat.gridPos.withH(3),
@@ -120,7 +120,7 @@ local var = g.dashboard.variable;
         statPanel(
           'Memory Limits Commitment',
           'percentunit',
-          'sum((sum by (namespace, %(clusterLabel)s) ( sum by (namespace, pod, %(clusterLabel)s) ( max by (namespace, pod, container, %(clusterLabel)s) ( kube_pod_container_resource_limits{resource="memory",%(kubeStateMetricsSelector)s} ) * on(namespace, pod, %(clusterLabel)s) group_left() max by (namespace, pod, %(clusterLabel)s) ( kube_pod_status_phase{phase=~"Pending|Running"} == 1 ) ) )){%(clusterLabel)s="$cluster"}) / sum(kube_node_status_allocatable{%(kubeStateMetricsSelector)s,resource="memory",%(clusterLabel)s="$cluster"})' % $._config
+          'sum(sum by (namespace, %(clusterLabel)s) ( sum by (namespace, pod, %(clusterLabel)s) ( max by (namespace, pod, container, %(clusterLabel)s) ( kube_pod_container_resource_limits{resource="memory",%(kubeStateMetricsSelector)s,%(clusterLabel)s="$cluster"} ) * on(namespace, pod, %(clusterLabel)s) group_left() max by (namespace, pod, %(clusterLabel)s) ( kube_pod_status_phase{phase=~"Pending|Running"} == 1 ) ) )) / sum(kube_node_status_allocatable{%(kubeStateMetricsSelector)s,resource="memory",%(clusterLabel)s="$cluster"})' % $._config
         )
         + stat.gridPos.withW(4)
         + stat.gridPos.withH(3),
@@ -129,7 +129,7 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'sum((sum by (%(clusterLabel)s, namespace, pod, container) ( rate(container_cpu_usage_seconds_total{%(cadvisorSelector)s, image!=""}[5m]) ) * on (%(clusterLabel)s, namespace, pod) group_left(node) topk by (%(clusterLabel)s, namespace, pod) ( 1, max by(%(clusterLabel)s, namespace, pod, node) (kube_pod_info{node!=""}) )){%(clusterLabel)s="$cluster"}) by (namespace)' % $._config
+            'sum by (namespace) (sum by (%(clusterLabel)s, namespace, pod, container) (rate(container_cpu_usage_seconds_total{%(cadvisorSelector)s, image!="", %(clusterLabel)s="$cluster"}[5m])) * on (%(clusterLabel)s, namespace, pod) group_left(node) topk by (%(clusterLabel)s, namespace, pod) (1, max by(%(clusterLabel)s, namespace, pod, node) (kube_pod_info{node!=""})))' % $._config
           )
           + prometheus.withLegendFormat('__auto'),
         ]),
@@ -140,27 +140,27 @@ local var = g.dashboard.variable;
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
-          prometheus.new('${datasource}', 'count(avg((max by (%(clusterLabel)s, namespace, workload, pod) ( label_replace( kube_pod_owner{%(kubeStateMetricsSelector)s, owner_kind="Job"}, "workload", "$1", "owner_name", "(.*)" ) )){%(clusterLabel)s="$cluster"}) by (workload, namespace)) by (namespace)' % $._config)
+          prometheus.new('${datasource}', 'count by (namespace) (avg by (workload, namespace) (max by (%(clusterLabel)s, namespace, workload, pod) (label_replace(kube_pod_owner{%(kubeStateMetricsSelector)s, owner_kind="Job", %(clusterLabel)s="$cluster"}, "workload", "$1", "owner_name", "(.*)" ))))' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
-          prometheus.new('${datasource}', 'sum((sum by (%(clusterLabel)s, namespace, pod, container) ( rate(container_cpu_usage_seconds_total{%(cadvisorSelector)s, image!=""}[5m]) ) * on (%(clusterLabel)s, namespace, pod) group_left(node) topk by (%(clusterLabel)s, namespace, pod) ( 1, max by(%(clusterLabel)s, namespace, pod, node) (kube_pod_info{node!=""}) )){%(clusterLabel)s="$cluster"}) by (namespace)' % $._config)
+          prometheus.new('${datasource}', 'sum by (namespace) (sum by (%(clusterLabel)s, namespace, pod, container) (rate(container_cpu_usage_seconds_total{%(cadvisorSelector)s, image!="", %(clusterLabel)s="$cluster"}[5m])) * on (%(clusterLabel)s, namespace, pod) group_left(node) topk by (%(clusterLabel)s, namespace, pod) (1, max by(%(clusterLabel)s, namespace, pod, node) (kube_pod_info{node!=""})))' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
-          prometheus.new('${datasource}', 'sum((sum by (namespace, %(clusterLabel)s) ( sum by (namespace, pod, %(clusterLabel)s) ( max by (namespace, pod, container, %(clusterLabel)s) ( kube_pod_container_resource_requests{resource="cpu",%(kubeStateMetricsSelector)s} ) * on(namespace, pod, %(clusterLabel)s) group_left() max by (namespace, pod, %(clusterLabel)s) ( kube_pod_status_phase{phase=~"Pending|Running"} == 1 ) ) )){%(clusterLabel)s="$cluster"}) by (namespace)' % $._config)
+          prometheus.new('${datasource}', 'sum by (namespace) (sum by (namespace, %(clusterLabel)s) (sum by (namespace, pod, %(clusterLabel)s) (max by (namespace, pod, container, %(clusterLabel)s) (kube_pod_container_resource_requests{resource="cpu",%(kubeStateMetricsSelector)s, %(clusterLabel)s="$cluster"}) * on(namespace, pod, %(clusterLabel)s) group_left() max by (namespace, pod, %(clusterLabel)s) (kube_pod_status_phase{phase=~"Pending|Running"} == 1))))' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
-          prometheus.new('${datasource}', 'sum((sum by (%(clusterLabel)s, namespace, pod, container) ( rate(container_cpu_usage_seconds_total{%(cadvisorSelector)s, image!=""}[5m]) ) * on (%(clusterLabel)s, namespace, pod) group_left(node) topk by (%(clusterLabel)s, namespace, pod) ( 1, max by(%(clusterLabel)s, namespace, pod, node) (kube_pod_info{node!=""}) )){%(clusterLabel)s="$cluster"}) by (namespace) / sum((sum by (namespace, %(clusterLabel)s) ( sum by (namespace, pod, %(clusterLabel)s) ( max by (namespace, pod, container, %(clusterLabel)s) ( kube_pod_container_resource_requests{resource="cpu",%(kubeStateMetricsSelector)s} ) * on(namespace, pod, %(clusterLabel)s) group_left() max by (namespace, pod, %(clusterLabel)s) ( kube_pod_status_phase{phase=~"Pending|Running"} == 1 ) ) )){%(clusterLabel)s="$cluster"}) by (namespace)' % $._config)
+          prometheus.new('${datasource}', 'sum by (namespace) (sum by (%(clusterLabel)s, namespace, pod, container) (rate(container_cpu_usage_seconds_total{%(cadvisorSelector)s, image!="", %(clusterLabel)s="$cluster"}[5m])) * on (%(clusterLabel)s, namespace, pod) group_left(node) topk by (%(clusterLabel)s, namespace, pod) (1, max by(%(clusterLabel)s, namespace, pod, node) (kube_pod_info{node!=""}))) / sum by (namespace) (sum by (namespace, %(clusterLabel)s) (sum by (namespace, pod, %(clusterLabel)s) (max by (namespace, pod, container, %(clusterLabel)s) (kube_pod_container_resource_requests{resource="cpu",%(kubeStateMetricsSelector)s, %(clusterLabel)s="$cluster"}) * on(namespace, pod, %(clusterLabel)s) group_left() max by (namespace, pod, %(clusterLabel)s) (kube_pod_status_phase{phase=~"Pending|Running"} == 1))))' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
-          prometheus.new('${datasource}', 'sum((sum by (namespace, %(clusterLabel)s) ( sum by (namespace, pod, %(clusterLabel)s) ( max by (namespace, pod, container, %(clusterLabel)s) ( kube_pod_container_resource_limits{resource="cpu",%(kubeStateMetricsSelector)s} ) * on(namespace, pod, %(clusterLabel)s) group_left() max by (namespace, pod, %(clusterLabel)s) ( kube_pod_status_phase{phase=~"Pending|Running"} == 1 ) ) )){%(clusterLabel)s="$cluster"}) by (namespace)' % $._config)
+          prometheus.new('${datasource}', 'sum by (namespace) (sum by (namespace, %(clusterLabel)s) (sum by (namespace, pod, %(clusterLabel)s) (max by (namespace, pod, container, %(clusterLabel)s) (kube_pod_container_resource_limits{resource="cpu",%(kubeStateMetricsSelector)s, %(clusterLabel)s="$cluster"}) * on(namespace, pod, %(clusterLabel)s) group_left() max by (namespace, pod, %(clusterLabel)s) (kube_pod_status_phase{phase=~"Pending|Running"} == 1))))' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
-          prometheus.new('${datasource}', 'sum((sum by (%(clusterLabel)s, namespace, pod, container) ( rate(container_cpu_usage_seconds_total{%(cadvisorSelector)s, image!=""}[5m]) ) * on (%(clusterLabel)s, namespace, pod) group_left(node) topk by (%(clusterLabel)s, namespace, pod) ( 1, max by(%(clusterLabel)s, namespace, pod, node) (kube_pod_info{node!=""}) )){%(clusterLabel)s="$cluster"}) by (namespace) / sum((sum by (namespace, %(clusterLabel)s) ( sum by (namespace, pod, %(clusterLabel)s) ( max by (namespace, pod, container, %(clusterLabel)s) ( kube_pod_container_resource_limits{resource="cpu",%(kubeStateMetricsSelector)s} ) * on(namespace, pod, %(clusterLabel)s) group_left() max by (namespace, pod, %(clusterLabel)s) ( kube_pod_status_phase{phase=~"Pending|Running"} == 1 ) ) )){%(clusterLabel)s="$cluster"}) by (namespace)' % $._config)
+          prometheus.new('${datasource}', 'sum by (namespace) (sum by (%(clusterLabel)s, namespace, pod, container) (rate(container_cpu_usage_seconds_total{%(cadvisorSelector)s, image!="", %(clusterLabel)s="$cluster"}[5m])) * on (%(clusterLabel)s, namespace, pod) group_left(node) topk by (%(clusterLabel)s, namespace, pod) (1, max by(%(clusterLabel)s, namespace, pod, node) (kube_pod_info{node!=""}))) / sum by (namespace) (sum by (namespace, %(clusterLabel)s) (sum by (namespace, pod, %(clusterLabel)s) (max by (namespace, pod, container, %(clusterLabel)s) (kube_pod_container_resource_limits{resource="cpu",%(kubeStateMetricsSelector)s, %(clusterLabel)s="$cluster"}) * on(namespace, pod, %(clusterLabel)s) group_left() max by (namespace, pod, %(clusterLabel)s) (kube_pod_status_phase{phase=~"Pending|Running"} == 1))))' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
         ])
@@ -246,7 +246,7 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'sum(container_memory_rss{%(cadvisorSelector)s, %(clusterLabel)s="$cluster", container!=""}) by (namespace)' % $._config
+            'sum by (namespace) (container_memory_rss{%(cadvisorSelector)s, %(clusterLabel)s="$cluster", container!=""})' % $._config
           )
           + prometheus.withLegendFormat('__auto'),
         ]),
@@ -257,27 +257,27 @@ local var = g.dashboard.variable;
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
-          prometheus.new('${datasource}', 'count(avg((max by (%(clusterLabel)s, namespace, workload, pod) ( label_replace( kube_pod_owner{%(kubeStateMetricsSelector)s, owner_kind="Job"}, "workload", "$1", "owner_name", "(.*)" ) )){%(clusterLabel)s="$cluster"}) by (workload, namespace)) by (namespace)' % $._config)
+          prometheus.new('${datasource}', 'count by (namespace) (avg by (workload, namespace) (max by (%(clusterLabel)s, namespace, workload, pod) (label_replace(kube_pod_owner{%(kubeStateMetricsSelector)s, owner_kind="Job", %(clusterLabel)s="$cluster"}, "workload", "$1", "owner_name", "(.*)" ))))' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
-          prometheus.new('${datasource}', 'sum(container_memory_rss{%(cadvisorSelector)s, %(clusterLabel)s="$cluster", container!=""}) by (namespace)' % $._config)
+          prometheus.new('${datasource}', 'sum by (namespace) (container_memory_rss{%(cadvisorSelector)s, %(clusterLabel)s="$cluster", container!=""})' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
-          prometheus.new('${datasource}', 'sum((sum by (namespace, %(clusterLabel)s) ( sum by (namespace, pod, %(clusterLabel)s) ( max by (namespace, pod, container, %(clusterLabel)s) ( kube_pod_container_resource_requests{resource="memory",%(kubeStateMetricsSelector)s} ) * on(namespace, pod, %(clusterLabel)s) group_left() max by (namespace, pod, %(clusterLabel)s) ( kube_pod_status_phase{phase=~"Pending|Running"} == 1 ) ) )){%(clusterLabel)s="$cluster"}) by (namespace)' % $._config)
+          prometheus.new('${datasource}', 'sum by (namespace) (sum by (namespace, %(clusterLabel)s) (sum by (namespace, pod, %(clusterLabel)s) (max by (namespace, pod, container, %(clusterLabel)s) (kube_pod_container_resource_requests{resource="memory",%(kubeStateMetricsSelector)s, %(clusterLabel)s="$cluster"}) * on(namespace, pod, %(clusterLabel)s) group_left() max by (namespace, pod, %(clusterLabel)s) (kube_pod_status_phase{phase=~"Pending|Running"} == 1))))' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
-          prometheus.new('${datasource}', 'sum(container_memory_rss{%(cadvisorSelector)s, %(clusterLabel)s="$cluster", container!=""}) by (namespace) / sum((sum by (namespace, %(clusterLabel)s) ( sum by (namespace, pod, %(clusterLabel)s) ( max by (namespace, pod, container, %(clusterLabel)s) ( kube_pod_container_resource_requests{resource="memory",%(kubeStateMetricsSelector)s} ) * on(namespace, pod, %(clusterLabel)s) group_left() max by (namespace, pod, %(clusterLabel)s) ( kube_pod_status_phase{phase=~"Pending|Running"} == 1 ) ) )){%(clusterLabel)s="$cluster"}) by (namespace)' % $._config)
+          prometheus.new('${datasource}', 'sum by (namespace) (container_memory_rss{%(cadvisorSelector)s, %(clusterLabel)s="$cluster", container!=""}) / sum by (namespace) (sum by (namespace, %(clusterLabel)s) (sum by (namespace, pod, %(clusterLabel)s) (max by (namespace, pod, container, %(clusterLabel)s) (kube_pod_container_resource_requests{resource="memory",%(kubeStateMetricsSelector)s, %(clusterLabel)s="$cluster"}) * on(namespace, pod, %(clusterLabel)s) group_left() max by (namespace, pod, %(clusterLabel)s) (kube_pod_status_phase{phase=~"Pending|Running"} == 1))))' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
-          prometheus.new('${datasource}', 'sum((sum by (namespace, %(clusterLabel)s) ( sum by (namespace, pod, %(clusterLabel)s) ( max by (namespace, pod, container, %(clusterLabel)s) ( kube_pod_container_resource_limits{resource="memory",%(kubeStateMetricsSelector)s} ) * on(namespace, pod, %(clusterLabel)s) group_left() max by (namespace, pod, %(clusterLabel)s) ( kube_pod_status_phase{phase=~"Pending|Running"} == 1 ) ) )){%(clusterLabel)s="$cluster"}) by (namespace)' % $._config)
+          prometheus.new('${datasource}', 'sum by (namespace) (sum by (namespace, %(clusterLabel)s) (sum by (namespace, pod, %(clusterLabel)s) (max by (namespace, pod, container, %(clusterLabel)s) (kube_pod_container_resource_limits{resource="memory",%(kubeStateMetricsSelector)s, %(clusterLabel)s="$cluster"}) * on(namespace, pod, %(clusterLabel)s) group_left() max by (namespace, pod, %(clusterLabel)s) (kube_pod_status_phase{phase=~"Pending|Running"} == 1))))' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
-          prometheus.new('${datasource}', 'sum(container_memory_rss{%(cadvisorSelector)s, %(clusterLabel)s="$cluster", container!=""}) by (namespace) / sum((sum by (namespace, %(clusterLabel)s) ( sum by (namespace, pod, %(clusterLabel)s) ( max by (namespace, pod, container, %(clusterLabel)s) ( kube_pod_container_resource_limits{resource="memory",%(kubeStateMetricsSelector)s} ) * on(namespace, pod, %(clusterLabel)s) group_left() max by (namespace, pod, %(clusterLabel)s) ( kube_pod_status_phase{phase=~"Pending|Running"} == 1 ) ) )){%(clusterLabel)s="$cluster"}) by (namespace)' % $._config)
+          prometheus.new('${datasource}', 'sum by (namespace) (container_memory_rss{%(cadvisorSelector)s, %(clusterLabel)s="$cluster", container!=""}) / sum by (namespace) (sum by (namespace, %(clusterLabel)s) (sum by (namespace, pod, %(clusterLabel)s) (max by (namespace, pod, container, %(clusterLabel)s) (kube_pod_container_resource_limits{resource="memory",%(kubeStateMetricsSelector)s, %(clusterLabel)s="$cluster"}) * on(namespace, pod, %(clusterLabel)s) group_left() max by (namespace, pod, %(clusterLabel)s) (kube_pod_status_phase{phase=~"Pending|Running"} == 1))))' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
         ])
@@ -396,27 +396,27 @@ local var = g.dashboard.variable;
 
         table.new('Current Network Usage')
         + table.queryOptions.withTargets([
-          prometheus.new('${datasource}', 'sum(rate(container_network_receive_bytes_total{%(cadvisorSelector)s, %(clusterLabel)s="$cluster", %(namespaceLabel)s=~".+"}[%(grafanaIntervalVar)s])) by (namespace)' % $._config)
+          prometheus.new('${datasource}', 'sum by (namespace) (rate(container_network_receive_bytes_total{%(cadvisorSelector)s, %(clusterLabel)s="$cluster", %(namespaceLabel)s=~".+"}[%(grafanaIntervalVar)s]))' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
-          prometheus.new('${datasource}', 'sum(rate(container_network_transmit_bytes_total{%(cadvisorSelector)s, %(clusterLabel)s="$cluster", %(namespaceLabel)s=~".+"}[%(grafanaIntervalVar)s])) by (namespace)' % $._config)
+          prometheus.new('${datasource}', 'sum by (namespace) (rate(container_network_transmit_bytes_total{%(cadvisorSelector)s, %(clusterLabel)s="$cluster", %(namespaceLabel)s=~".+"}[%(grafanaIntervalVar)s]))' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
-          prometheus.new('${datasource}', 'sum(rate(container_network_receive_packets_total{%(cadvisorSelector)s, %(clusterLabel)s="$cluster", %(namespaceLabel)s=~".+"}[%(grafanaIntervalVar)s])) by (namespace)' % $._config)
+          prometheus.new('${datasource}', 'sum by (namespace) (rate(container_network_receive_packets_total{%(cadvisorSelector)s, %(clusterLabel)s="$cluster", %(namespaceLabel)s=~".+"}[%(grafanaIntervalVar)s]))' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
-          prometheus.new('${datasource}', 'sum(rate(container_network_transmit_packets_total{%(cadvisorSelector)s, %(clusterLabel)s="$cluster", %(namespaceLabel)s=~".+"}[%(grafanaIntervalVar)s])) by (namespace)' % $._config)
+          prometheus.new('${datasource}', 'sum by (namespace) (rate(container_network_transmit_packets_total{%(cadvisorSelector)s, %(clusterLabel)s="$cluster", %(namespaceLabel)s=~".+"}[%(grafanaIntervalVar)s]))' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
-          prometheus.new('${datasource}', 'sum(rate(container_network_receive_packets_dropped_total{%(cadvisorSelector)s, %(clusterLabel)s="$cluster", %(namespaceLabel)s=~".+"}[%(grafanaIntervalVar)s])) by (namespace)' % $._config)
+          prometheus.new('${datasource}', 'sum by (namespace) (rate(container_network_receive_packets_dropped_total{%(cadvisorSelector)s, %(clusterLabel)s="$cluster", %(namespaceLabel)s=~".+"}[%(grafanaIntervalVar)s]))' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
-          prometheus.new('${datasource}', 'sum(rate(container_network_transmit_packets_dropped_total{%(cadvisorSelector)s, %(clusterLabel)s="$cluster", %(namespaceLabel)s=~".+"}[%(grafanaIntervalVar)s])) by (namespace)' % $._config)
+          prometheus.new('${datasource}', 'sum by (namespace) (rate(container_network_transmit_packets_dropped_total{%(cadvisorSelector)s, %(clusterLabel)s="$cluster", %(namespaceLabel)s=~".+"}[%(grafanaIntervalVar)s]))' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
         ])
@@ -510,7 +510,7 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'sum(rate(container_network_receive_bytes_total{%(cadvisorSelector)s, %(clusterLabel)s="$cluster", %(namespaceLabel)s=~".+"}[%(grafanaIntervalVar)s])) by (namespace)' % $._config
+            'sum by (namespace) (rate(container_network_receive_bytes_total{%(cadvisorSelector)s, %(clusterLabel)s="$cluster", %(namespaceLabel)s=~".+"}[%(grafanaIntervalVar)s]))' % $._config
           )
           + prometheus.withLegendFormat('__auto'),
         ]),
@@ -520,7 +520,7 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'sum(rate(container_network_transmit_bytes_total{%(cadvisorSelector)s, %(clusterLabel)s="$cluster", %(namespaceLabel)s=~".+"}[%(grafanaIntervalVar)s])) by (namespace)' % $._config
+            'sum by (namespace) (rate(container_network_transmit_bytes_total{%(cadvisorSelector)s, %(clusterLabel)s="$cluster", %(namespaceLabel)s=~".+"}[%(grafanaIntervalVar)s]))' % $._config
           )
           + prometheus.withLegendFormat('__auto'),
         ]),
@@ -530,7 +530,7 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'avg(irate(container_network_receive_bytes_total{%(cadvisorSelector)s, %(clusterLabel)s="$cluster", %(namespaceLabel)s=~".+"}[%(grafanaIntervalVar)s])) by (namespace)' % $._config
+            'avg by (namespace) (irate(container_network_receive_bytes_total{%(cadvisorSelector)s, %(clusterLabel)s="$cluster", %(namespaceLabel)s=~".+"}[%(grafanaIntervalVar)s]))' % $._config
           )
           + prometheus.withLegendFormat('__auto'),
         ]),
@@ -540,7 +540,7 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'avg(irate(container_network_transmit_bytes_total{%(cadvisorSelector)s, %(clusterLabel)s="$cluster", %(namespaceLabel)s=~".+"}[%(grafanaIntervalVar)s])) by (namespace)' % $._config
+            'avg by (namespace) (irate(container_network_transmit_bytes_total{%(cadvisorSelector)s, %(clusterLabel)s="$cluster", %(namespaceLabel)s=~".+"}[%(grafanaIntervalVar)s]))' % $._config
           )
           + prometheus.withLegendFormat('__auto'),
         ]),
@@ -550,7 +550,7 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'sum(irate(container_network_receive_packets_total{%(cadvisorSelector)s, %(clusterLabel)s="$cluster", %(namespaceLabel)s=~".+"}[%(grafanaIntervalVar)s])) by (namespace)' % $._config
+            'sum by (namespace) (irate(container_network_receive_packets_total{%(cadvisorSelector)s, %(clusterLabel)s="$cluster", %(namespaceLabel)s=~".+"}[%(grafanaIntervalVar)s]))' % $._config
           )
           + prometheus.withLegendFormat('__auto'),
         ]),
@@ -560,7 +560,7 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'sum(irate(container_network_transmit_packets_total{%(cadvisorSelector)s, %(clusterLabel)s="$cluster", %(namespaceLabel)s=~".+"}[%(grafanaIntervalVar)s])) by (namespace)' % $._config
+            'sum by (namespace) (irate(container_network_transmit_packets_total{%(cadvisorSelector)s, %(clusterLabel)s="$cluster", %(namespaceLabel)s=~".+"}[%(grafanaIntervalVar)s]))' % $._config
           )
           + prometheus.withLegendFormat('__auto'),
         ]),
@@ -570,7 +570,7 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'sum(irate(container_network_receive_packets_dropped_total{%(cadvisorSelector)s, %(clusterLabel)s="$cluster", %(namespaceLabel)s=~".+"}[%(grafanaIntervalVar)s])) by (namespace)' % $._config
+            'sum by (namespace) (irate(container_network_receive_packets_dropped_total{%(cadvisorSelector)s, %(clusterLabel)s="$cluster", %(namespaceLabel)s=~".+"}[%(grafanaIntervalVar)s]))' % $._config
           )
           + prometheus.withLegendFormat('__auto'),
         ]),
@@ -580,7 +580,7 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'sum(irate(container_network_transmit_packets_dropped_total{%(cadvisorSelector)s, %(clusterLabel)s="$cluster", %(namespaceLabel)s=~".+"}[%(grafanaIntervalVar)s])) by (namespace)' % $._config
+            'sum by (namespace) (irate(container_network_transmit_packets_dropped_total{%(cadvisorSelector)s, %(clusterLabel)s="$cluster", %(namespaceLabel)s=~".+"}[%(grafanaIntervalVar)s]))' % $._config
           )
           + prometheus.withLegendFormat('__auto'),
         ]),

@@ -269,7 +269,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(rate(kubelet_runtime_operations_total{cluster=\"$cluster\",job=\"kubelet\",instance=~\"$instance\"}[$__rate_interval])) by (operation_type, instance)",
+               "expr": "sum by (operation_type, instance) (rate(kubelet_runtime_operations_total{cluster=\"$cluster\",job=\"kubelet\",instance=~\"$instance\"}[$__rate_interval]))",
                "legendFormat": "{{instance}} {{operation_type}}"
             }
          ],
@@ -320,7 +320,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(rate(kubelet_runtime_operations_errors_total{cluster=\"$cluster\",job=\"kubelet\",instance=~\"$instance\"}[$__rate_interval])) by (instance, operation_type)",
+               "expr": "sum by (instance, operation_type) (rate(kubelet_runtime_operations_errors_total{cluster=\"$cluster\",job=\"kubelet\",instance=~\"$instance\"}[$__rate_interval]))",
                "legendFormat": "{{instance}} {{operation_type}}"
             }
          ],
@@ -371,8 +371,8 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "histogram_quantile(0.99, sum(rate(kubelet_runtime_operations_duration_seconds_bucket{cluster=\"$cluster\",job=\"kubelet\",instance=~\"$instance\"}[$__rate_interval])) by (instance, operation_type, le))",
-               "legendFormat": "{{instance}} {{operation_type}}"
+               "expr": "histogram_quantile(0.99, sum by (instance, operation_type, le) (rate(kubelet_runtime_operations_duration_seconds_bucket{cluster=\"$cluster\",job=\"kubelet\",instance=~\"$instance\"}[$__rate_interval])))",
+               "legendFormat": "{{instance}} - {{operation_type}}"
             }
          ],
          "title": "Operation Duration 99th quantile",
@@ -422,7 +422,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(rate(kubelet_pod_start_duration_seconds_count{cluster=\"$cluster\",job=\"kubelet\",instance=~\"$instance\"}[$__rate_interval])) by (instance)",
+               "expr": "sum by (instance) (rate(kubelet_pod_start_duration_seconds_count{cluster=\"$cluster\",job=\"kubelet\",instance=~\"$instance\"}[$__rate_interval]))",
                "legendFormat": "{{instance}} pod"
             },
             {
@@ -430,7 +430,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(rate(kubelet_pod_worker_duration_seconds_count{cluster=\"$cluster\",job=\"kubelet\",instance=~\"$instance\"}[$__rate_interval])) by (instance)",
+               "expr": "sum by (instance) (rate(kubelet_pod_worker_duration_seconds_count{cluster=\"$cluster\",job=\"kubelet\",instance=~\"$instance\"}[$__rate_interval]))",
                "legendFormat": "{{instance}} worker"
             }
          ],
@@ -481,16 +481,16 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "histogram_quantile(0.99, sum(rate(kubelet_pod_start_duration_seconds_bucket{cluster=\"$cluster\",job=\"kubelet\",instance=~\"$instance\"}[$__rate_interval])) by (instance, le))",
-               "legendFormat": "{{instance}} pod"
+               "expr": "histogram_quantile(0.99, sum by (instance, le) (rate(kubelet_pod_start_duration_seconds_bucket{cluster=\"$cluster\",job=\"kubelet\",instance=~\"$instance\"}[$__rate_interval])))",
+               "legendFormat": "Pod startup"
             },
             {
                "datasource": {
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "histogram_quantile(0.99, sum(rate(kubelet_pod_worker_duration_seconds_bucket{cluster=\"$cluster\",job=\"kubelet\",instance=~\"$instance\"}[$__rate_interval])) by (instance, le))",
-               "legendFormat": "{{instance}} worker"
+               "expr": "histogram_quantile(0.99, sum by (instance, le) (rate(kubelet_pod_worker_duration_seconds_bucket{cluster=\"$cluster\",job=\"kubelet\",instance=~\"$instance\"}[$__rate_interval])))",
+               "legendFormat": "Pod worker"
             }
          ],
          "title": "Pod Start Duration",
@@ -540,7 +540,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(rate(storage_operation_duration_seconds_count{cluster=\"$cluster\",job=\"kubelet\",instance=~\"$instance\"}[$__rate_interval])) by (instance, operation_name, volume_plugin)",
+               "expr": "sum by (instance, operation_name, volume_plugin) (rate(storage_operation_duration_seconds_count{cluster=\"$cluster\",job=\"kubelet\",instance=~\"$instance\"}[$__rate_interval]))",
                "legendFormat": "{{instance}} {{operation_name}} {{volume_plugin}}"
             }
          ],
@@ -591,7 +591,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(rate(storage_operation_errors_total{cluster=\"$cluster\",job=\"kubelet\",instance=~\"$instance\"}[$__rate_interval])) by (instance, operation_name, volume_plugin)",
+               "expr": "sum by (instance, operation_name, volume_plugin) (rate(storage_operation_errors_total{cluster=\"$cluster\",job=\"kubelet\",instance=~\"$instance\"}[$__rate_interval]))",
                "legendFormat": "{{instance}} {{operation_name}} {{volume_plugin}}"
             }
          ],
@@ -642,8 +642,8 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "histogram_quantile(0.99, sum(rate(storage_operation_duration_seconds_bucket{cluster=\"$cluster\", job=\"kubelet\", instance=~\"$instance\"}[$__rate_interval])) by (instance, operation_name, volume_plugin, le))",
-               "legendFormat": "{{instance}} {{operation_name}} {{volume_plugin}}"
+               "expr": "histogram_quantile(0.99, sum by (instance, operation_name, volume_plugin, le) (rate(storage_operation_duration_seconds_bucket{cluster=\"$cluster\", job=\"kubelet\", instance=~\"$instance\"}[$__rate_interval])))",
+               "legendFormat": "{{instance}} - {{operation_name}} - {{volume_plugin}}"
             }
          ],
          "title": "Storage Operation Duration 99th quantile",
@@ -693,7 +693,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(rate(kubelet_cgroup_manager_duration_seconds_count{cluster=\"$cluster\", job=\"kubelet\", instance=~\"$instance\"}[$__rate_interval])) by (instance, operation_type)",
+               "expr": "sum by (instance, operation_type) (rate(kubelet_cgroup_manager_duration_seconds_count{cluster=\"$cluster\", job=\"kubelet\", instance=~\"$instance\"}[$__rate_interval]))",
                "legendFormat": "{{operation_type}}"
             }
          ],
@@ -744,8 +744,8 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "histogram_quantile(0.99, sum(rate(kubelet_cgroup_manager_duration_seconds_bucket{cluster=\"$cluster\", job=\"kubelet\", instance=~\"$instance\"}[$__rate_interval])) by (instance, operation_type, le))",
-               "legendFormat": "{{instance}} {{operation_type}}"
+               "expr": "histogram_quantile(0.99, sum by (instance, operation_type, le) (rate(kubelet_cgroup_manager_duration_seconds_bucket{cluster=\"$cluster\", job=\"kubelet\", instance=~\"$instance\"}[$__rate_interval])))",
+               "legendFormat": "{{operation_type}}"
             }
          ],
          "title": "Cgroup manager 99th quantile",
@@ -795,7 +795,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(rate(kubelet_pleg_relist_duration_seconds_count{cluster=\"$cluster\", job=\"kubelet\", instance=~\"$instance\"}[$__rate_interval])) by (instance)",
+               "expr": "sum by (instance) (rate(kubelet_pleg_relist_duration_seconds_count{cluster=\"$cluster\", job=\"kubelet\", instance=~\"$instance\"}[$__rate_interval]))",
                "legendFormat": "{{instance}}"
             }
          ],
@@ -846,7 +846,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "histogram_quantile(0.99, sum(rate(kubelet_pleg_relist_interval_seconds_bucket{cluster=\"$cluster\",job=\"kubelet\",instance=~\"$instance\"}[$__rate_interval])) by (instance, le))",
+               "expr": "histogram_quantile(0.99, sum by (instance, le) (rate(kubelet_pleg_relist_interval_seconds_bucket{cluster=\"$cluster\",job=\"kubelet\",instance=~\"$instance\"}[$__rate_interval])))",
                "legendFormat": "{{instance}}"
             }
          ],
@@ -897,7 +897,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "histogram_quantile(0.99, sum(rate(kubelet_pleg_relist_duration_seconds_bucket{cluster=\"$cluster\",job=\"kubelet\",instance=~\"$instance\"}[$__rate_interval])) by (instance, le))",
+               "expr": "histogram_quantile(0.99, sum by (instance, le) (rate(kubelet_pleg_relist_duration_seconds_bucket{cluster=\"$cluster\",job=\"kubelet\",instance=~\"$instance\"}[$__rate_interval])))",
                "legendFormat": "{{instance}}"
             }
          ],
@@ -1023,7 +1023,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "histogram_quantile(0.99, sum(rate(rest_client_request_duration_seconds_bucket{cluster=\"$cluster\",job=\"kubelet\", instance=~\"$instance\"}[$__rate_interval])) by (instance, verb, le))",
+               "expr": "histogram_quantile(0.99, sum by (instance, verb, le) (rate(rest_client_request_duration_seconds_bucket{cluster=\"$cluster\",job=\"kubelet\", instance=~\"$instance\"}[$__rate_interval])))",
                "legendFormat": "{{instance}} {{verb}}"
             }
          ],

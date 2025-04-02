@@ -93,97 +93,97 @@ local var = g.dashboard.variable;
           tsPanel.new('Operation Rate')
           + tsPanel.standardOptions.withUnit('ops')
           + tsPanel.queryOptions.withTargets([
-            prometheus.new('${datasource}', 'sum(rate(kubelet_runtime_operations_total{%(clusterLabel)s="$cluster",%(kubeletSelector)s,instance=~"$instance"}[%(grafanaIntervalVar)s])) by (operation_type, instance)' % $._config)
+            prometheus.new('${datasource}', 'sum by (operation_type, instance) (rate(kubelet_runtime_operations_total{%(clusterLabel)s="$cluster",%(kubeletSelector)s,instance=~"$instance"}[%(grafanaIntervalVar)s]))' % $._config)
             + prometheus.withLegendFormat('{{instance}} {{operation_type}}'),
           ]),
         tsOperationErrorRate:
           tsPanel.new('Operation Error Rate')
           + tsPanel.standardOptions.withUnit('ops')
           + tsPanel.queryOptions.withTargets([
-            prometheus.new('${datasource}', 'sum(rate(kubelet_runtime_operations_errors_total{%(clusterLabel)s="$cluster",%(kubeletSelector)s,instance=~"$instance"}[%(grafanaIntervalVar)s])) by (instance, operation_type)' % $._config)
+            prometheus.new('${datasource}', 'sum by (instance, operation_type) (rate(kubelet_runtime_operations_errors_total{%(clusterLabel)s="$cluster",%(kubeletSelector)s,instance=~"$instance"}[%(grafanaIntervalVar)s]))' % $._config)
             + prometheus.withLegendFormat('{{instance}} {{operation_type}}'),
           ]),
         tsOperationDuration:
           tsPanel.new('Operation Duration 99th quantile')
           + tsPanel.standardOptions.withUnit('s')
           + tsPanel.queryOptions.withTargets([
-            prometheus.new('${datasource}', 'histogram_quantile(0.99, sum(rate(kubelet_runtime_operations_duration_seconds_bucket{%(clusterLabel)s="$cluster",%(kubeletSelector)s,instance=~"$instance"}[%(grafanaIntervalVar)s])) by (instance, operation_type, le))' % $._config)
-            + prometheus.withLegendFormat('{{instance}} {{operation_type}}'),
+            prometheus.new('${datasource}', 'histogram_quantile(0.99, sum by (instance, operation_type, le) (rate(kubelet_runtime_operations_duration_seconds_bucket{%(clusterLabel)s="$cluster",%(kubeletSelector)s,instance=~"$instance"}[%(grafanaIntervalVar)s])))' % $._config)
+            + prometheus.withLegendFormat('{{instance}} - {{operation_type}}'),
           ]),
         tsPodStartRate:
           tsPanel.new('Pod Start Rate')
           + tsPanel.standardOptions.withUnit('ops')
           + tsPanel.queryOptions.withTargets([
-            prometheus.new('${datasource}', 'sum(rate(kubelet_pod_start_duration_seconds_count{%(clusterLabel)s="$cluster",%(kubeletSelector)s,instance=~"$instance"}[%(grafanaIntervalVar)s])) by (instance)' % $._config)
+            prometheus.new('${datasource}', 'sum by (instance) (rate(kubelet_pod_start_duration_seconds_count{%(clusterLabel)s="$cluster",%(kubeletSelector)s,instance=~"$instance"}[%(grafanaIntervalVar)s]))' % $._config)
             + prometheus.withLegendFormat('{{instance}} pod'),
 
-            prometheus.new('${datasource}', 'sum(rate(kubelet_pod_worker_duration_seconds_count{%(clusterLabel)s="$cluster",%(kubeletSelector)s,instance=~"$instance"}[%(grafanaIntervalVar)s])) by (instance)' % $._config)
+            prometheus.new('${datasource}', 'sum by (instance) (rate(kubelet_pod_worker_duration_seconds_count{%(clusterLabel)s="$cluster",%(kubeletSelector)s,instance=~"$instance"}[%(grafanaIntervalVar)s]))' % $._config)
             + prometheus.withLegendFormat('{{instance}} worker'),
           ]),
         tsPodStartDuration:
           tsPanel.new('Pod Start Duration')
           + tsPanel.standardOptions.withUnit('s')
           + tsPanel.queryOptions.withTargets([
-            prometheus.new('${datasource}', 'histogram_quantile(0.99, sum(rate(kubelet_pod_start_duration_seconds_bucket{%(clusterLabel)s="$cluster",%(kubeletSelector)s,instance=~"$instance"}[%(grafanaIntervalVar)s])) by (instance, le))' % $._config)
-            + prometheus.withLegendFormat('{{instance}} pod'),
+            prometheus.new('${datasource}', 'histogram_quantile(0.99, sum by (instance, le) (rate(kubelet_pod_start_duration_seconds_bucket{%(clusterLabel)s="$cluster",%(kubeletSelector)s,instance=~"$instance"}[%(grafanaIntervalVar)s])))' % $._config)
+            + prometheus.withLegendFormat('Pod startup'),
 
-            prometheus.new('${datasource}', 'histogram_quantile(0.99, sum(rate(kubelet_pod_worker_duration_seconds_bucket{%(clusterLabel)s="$cluster",%(kubeletSelector)s,instance=~"$instance"}[%(grafanaIntervalVar)s])) by (instance, le))' % $._config)
-            + prometheus.withLegendFormat('{{instance}} worker'),
+            prometheus.new('${datasource}', 'histogram_quantile(0.99, sum by (instance, le) (rate(kubelet_pod_worker_duration_seconds_bucket{%(clusterLabel)s="$cluster",%(kubeletSelector)s,instance=~"$instance"}[%(grafanaIntervalVar)s])))' % $._config)
+            + prometheus.withLegendFormat('Pod worker'),
           ]),
         tsStorageOperationRate:
           tsPanel.new('Storage Operation Rate')
           + tsPanel.standardOptions.withUnit('ops')
           + tsPanel.queryOptions.withTargets([
-            prometheus.new('${datasource}', 'sum(rate(storage_operation_duration_seconds_count{%(clusterLabel)s="$cluster",%(kubeletSelector)s,instance=~"$instance"}[%(grafanaIntervalVar)s])) by (instance, operation_name, volume_plugin)' % $._config)
+            prometheus.new('${datasource}', 'sum by (instance, operation_name, volume_plugin) (rate(storage_operation_duration_seconds_count{%(clusterLabel)s="$cluster",%(kubeletSelector)s,instance=~"$instance"}[%(grafanaIntervalVar)s]))' % $._config)
             + prometheus.withLegendFormat('{{instance}} {{operation_name}} {{volume_plugin}}'),
           ]),
         tsStorageOperationErrorRate:
           tsPanel.new('Storage Operation Error Rate')
           + tsPanel.standardOptions.withUnit('ops')
           + tsPanel.queryOptions.withTargets([
-            prometheus.new('${datasource}', 'sum(rate(storage_operation_errors_total{%(clusterLabel)s="$cluster",%(kubeletSelector)s,instance=~"$instance"}[%(grafanaIntervalVar)s])) by (instance, operation_name, volume_plugin)' % $._config)
+            prometheus.new('${datasource}', 'sum by (instance, operation_name, volume_plugin) (rate(storage_operation_errors_total{%(clusterLabel)s="$cluster",%(kubeletSelector)s,instance=~"$instance"}[%(grafanaIntervalVar)s]))' % $._config)
             + prometheus.withLegendFormat('{{instance}} {{operation_name}} {{volume_plugin}}'),
           ]),
         tsStorageOperationDuration:
           tsPanel.new('Storage Operation Duration 99th quantile')
           + tsPanel.standardOptions.withUnit('s')
           + tsPanel.queryOptions.withTargets([
-            prometheus.new('${datasource}', 'histogram_quantile(0.99, sum(rate(storage_operation_duration_seconds_bucket{%(clusterLabel)s="$cluster", %(kubeletSelector)s, instance=~"$instance"}[%(grafanaIntervalVar)s])) by (instance, operation_name, volume_plugin, le))' % $._config)
-            + prometheus.withLegendFormat('{{instance}} {{operation_name}} {{volume_plugin}}'),
+            prometheus.new('${datasource}', 'histogram_quantile(0.99, sum by (instance, operation_name, volume_plugin, le) (rate(storage_operation_duration_seconds_bucket{%(clusterLabel)s="$cluster", %(kubeletSelector)s, instance=~"$instance"}[%(grafanaIntervalVar)s])))' % $._config)
+            + prometheus.withLegendFormat('{{instance}} - {{operation_name}} - {{volume_plugin}}'),
           ]),
         tsCgroupManagerOperationRate:
           tsPanel.new('Cgroup manager operation rate')
           + tsPanel.standardOptions.withUnit('ops')
           + tsPanel.queryOptions.withTargets([
-            prometheus.new('${datasource}', 'sum(rate(kubelet_cgroup_manager_duration_seconds_count{%(clusterLabel)s="$cluster", %(kubeletSelector)s, instance=~"$instance"}[%(grafanaIntervalVar)s])) by (instance, operation_type)' % $._config)
+            prometheus.new('${datasource}', 'sum by (instance, operation_type) (rate(kubelet_cgroup_manager_duration_seconds_count{%(clusterLabel)s="$cluster", %(kubeletSelector)s, instance=~"$instance"}[%(grafanaIntervalVar)s]))' % $._config)
             + prometheus.withLegendFormat('{{operation_type}}'),
           ]),
         tsCgroupManagerOperationDuration:
           tsPanel.new('Cgroup manager 99th quantile')
           + tsPanel.standardOptions.withUnit('s')
           + tsPanel.queryOptions.withTargets([
-            prometheus.new('${datasource}', 'histogram_quantile(0.99, sum(rate(kubelet_cgroup_manager_duration_seconds_bucket{%(clusterLabel)s="$cluster", %(kubeletSelector)s, instance=~"$instance"}[%(grafanaIntervalVar)s])) by (instance, operation_type, le))' % $._config)
-            + prometheus.withLegendFormat('{{instance}} {{operation_type}}'),
+            prometheus.new('${datasource}', 'histogram_quantile(0.99, sum by (instance, operation_type, le) (rate(kubelet_cgroup_manager_duration_seconds_bucket{%(clusterLabel)s="$cluster", %(kubeletSelector)s, instance=~"$instance"}[%(grafanaIntervalVar)s])))' % $._config)
+            + prometheus.withLegendFormat('{{operation_type}}'),
           ]),
         tsPlegRelistRate:
           tsPanel.new('PLEG relist rate')
           + tsPanel.standardOptions.withUnit('ops')
           + tsPanel.queryOptions.withTargets([
-            prometheus.new('${datasource}', 'sum(rate(kubelet_pleg_relist_duration_seconds_count{%(clusterLabel)s="$cluster", %(kubeletSelector)s, instance=~"$instance"}[%(grafanaIntervalVar)s])) by (instance)' % $._config)
+            prometheus.new('${datasource}', 'sum by (instance) (rate(kubelet_pleg_relist_duration_seconds_count{%(clusterLabel)s="$cluster", %(kubeletSelector)s, instance=~"$instance"}[%(grafanaIntervalVar)s]))' % $._config)
             + prometheus.withLegendFormat('{{instance}}'),
           ]),
         tsPlegRelistInterval:
           tsPanel.new('PLEG relist interval')
           + tsPanel.standardOptions.withUnit('s')
           + tsPanel.queryOptions.withTargets([
-            prometheus.new('${datasource}', 'histogram_quantile(0.99, sum(rate(kubelet_pleg_relist_interval_seconds_bucket{%(clusterLabel)s="$cluster",%(kubeletSelector)s,instance=~"$instance"}[%(grafanaIntervalVar)s])) by (instance, le))' % $._config)
+            prometheus.new('${datasource}', 'histogram_quantile(0.99, sum by (instance, le) (rate(kubelet_pleg_relist_interval_seconds_bucket{%(clusterLabel)s="$cluster",%(kubeletSelector)s,instance=~"$instance"}[%(grafanaIntervalVar)s])))' % $._config)
             + prometheus.withLegendFormat('{{instance}}'),
           ]),
         tsPlegRelistDuration:
           tsPanel.new('PLEG relist duration')
           + tsPanel.standardOptions.withUnit('s')
           + tsPanel.queryOptions.withTargets([
-            prometheus.new('${datasource}', 'histogram_quantile(0.99, sum(rate(kubelet_pleg_relist_duration_seconds_bucket{%(clusterLabel)s="$cluster",%(kubeletSelector)s,instance=~"$instance"}[%(grafanaIntervalVar)s])) by (instance, le))' % $._config)
+            prometheus.new('${datasource}', 'histogram_quantile(0.99, sum by (instance, le) (rate(kubelet_pleg_relist_duration_seconds_bucket{%(clusterLabel)s="$cluster",%(kubeletSelector)s,instance=~"$instance"}[%(grafanaIntervalVar)s])))' % $._config)
             + prometheus.withLegendFormat('{{instance}}'),
           ]),
         tsRpcRate:
@@ -206,7 +206,7 @@ local var = g.dashboard.variable;
           tsPanel.new('Request duration 99th quantile')
           + tsPanel.standardOptions.withUnit('s')
           + tsPanel.queryOptions.withTargets([
-            prometheus.new('${datasource}', 'histogram_quantile(0.99, sum(rate(rest_client_request_duration_seconds_bucket{%(clusterLabel)s="$cluster",%(kubeletSelector)s, instance=~"$instance"}[%(grafanaIntervalVar)s])) by (instance, verb, le))' % $._config)
+            prometheus.new('${datasource}', 'histogram_quantile(0.99, sum by (instance, verb, le) (rate(rest_client_request_duration_seconds_bucket{%(clusterLabel)s="$cluster",%(kubeletSelector)s, instance=~"$instance"}[%(grafanaIntervalVar)s])))' % $._config)
             + prometheus.withLegendFormat('{{instance}} {{verb}}'),
           ]),
         tsMemory:

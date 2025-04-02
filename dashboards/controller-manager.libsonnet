@@ -91,7 +91,7 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'sum(rate(workqueue_adds_total{%(clusterLabel)s="$cluster", %(kubeControllerManagerSelector)s, instance=~"$instance"}[%(grafanaIntervalVar)s])) by (%(clusterLabel)s, instance, name)' % $._config
+            'sum by (%(clusterLabel)s, instance, name) (rate(workqueue_adds_total{%(clusterLabel)s="$cluster", %(kubeControllerManagerSelector)s, instance=~"$instance"}[%(grafanaIntervalVar)s]))' % $._config
           )
           + prometheus.withLegendFormat('{{%(clusterLabel)s}} {{instance}} {{name}}' % $._config),
         ]),
@@ -101,7 +101,7 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'sum(rate(workqueue_depth{%(clusterLabel)s="$cluster", %(kubeControllerManagerSelector)s, instance=~"$instance"}[%(grafanaIntervalVar)s])) by (%(clusterLabel)s, instance, name)' % $._config
+            'sum by (%(clusterLabel)s, instance, name) (rate(workqueue_depth{%(clusterLabel)s="$cluster", %(kubeControllerManagerSelector)s, instance=~"$instance"}[%(grafanaIntervalVar)s]))' % $._config
           )
           + prometheus.withLegendFormat('{{%(clusterLabel)s}} {{instance}} {{name}}' % $._config),
         ]),
@@ -111,7 +111,7 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'histogram_quantile(0.99, sum(rate(workqueue_queue_duration_seconds_bucket{%(clusterLabel)s="$cluster", %(kubeControllerManagerSelector)s, instance=~"$instance"}[%(grafanaIntervalVar)s])) by (%(clusterLabel)s, instance, name, le))' % $._config
+            'histogram_quantile(0.99, sum by (%(clusterLabel)s, instance, name, le) (rate(workqueue_queue_duration_seconds_bucket{%(clusterLabel)s="$cluster", %(kubeControllerManagerSelector)s, instance=~"$instance"}[%(grafanaIntervalVar)s])))' % $._config
           )
           + prometheus.withLegendFormat('{{%(clusterLabel)s}} {{instance}} {{name}}' % $._config),
         ]),
@@ -151,7 +151,7 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'histogram_quantile(0.99, sum(rate(rest_client_request_duration_seconds_bucket{%(clusterLabel)s="$cluster", %(kubeControllerManagerSelector)s, instance=~"$instance", verb="POST"}[%(grafanaIntervalVar)s])) by (verb, le))' % $._config
+            'histogram_quantile(0.99, sum by (verb, le) (rate(rest_client_request_duration_seconds_bucket{%(clusterLabel)s="$cluster", %(kubeControllerManagerSelector)s, instance=~"$instance", verb="POST"}[%(grafanaIntervalVar)s])))' % $._config
           )
           + prometheus.withLegendFormat('{{verb}}'),
         ]),
@@ -161,7 +161,7 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'histogram_quantile(0.99, sum(rate(rest_client_request_duration_seconds_bucket{%(clusterLabel)s="$cluster", %(kubeControllerManagerSelector)s, instance=~"$instance", verb="GET"}[%(grafanaIntervalVar)s])) by (verb, le))' % $._config
+            'histogram_quantile(0.99, sum by (verb, le) (rate(rest_client_request_duration_seconds_bucket{%(clusterLabel)s="$cluster", %(kubeControllerManagerSelector)s, instance=~"$instance", verb="GET"}[%(grafanaIntervalVar)s])))' % $._config
           )
           + prometheus.withLegendFormat('{{verb}}'),
         ]),

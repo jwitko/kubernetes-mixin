@@ -144,7 +144,7 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'sum(rate(container_network_receive_bytes_total{%(clusterLabel)s="$cluster",namespace=~"$namespace", pod=~"$pod"}[%(grafanaIntervalVar)s])) by (pod)' % $._config
+            'sum by (pod) (rate(container_network_receive_bytes_total{%(clusterLabel)s="$cluster",namespace=~"$namespace", pod=~"$pod"}[%(grafanaIntervalVar)s]))' % $._config
           )
           + prometheus.withLegendFormat('__auto'),
         ]),
@@ -154,7 +154,7 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'sum(rate(container_network_transmit_bytes_total{%(clusterLabel)s="$cluster",namespace=~"$namespace", pod=~"$pod"}[%(grafanaIntervalVar)s])) by (pod)' % $._config
+            'sum by (pod) (rate(container_network_transmit_bytes_total{%(clusterLabel)s="$cluster",namespace=~"$namespace", pod=~"$pod"}[%(grafanaIntervalVar)s]))' % $._config
           )
           + prometheus.withLegendFormat('__auto'),
         ]),
@@ -162,28 +162,28 @@ local var = g.dashboard.variable;
         tsPanel.new('Rate of Received Packets')
         + tsPanel.standardOptions.withUnit('pps')
         + tsPanel.queryOptions.withTargets([
-          prometheus.new('${datasource}', 'sum(rate(container_network_receive_packets_total{%(clusterLabel)s="$cluster",namespace=~"$namespace", pod=~"$pod"}[%(grafanaIntervalVar)s])) by (pod)' % $._config)
+          prometheus.new('${datasource}', 'sum by (pod) (rate(container_network_receive_packets_total{%(clusterLabel)s="$cluster",namespace=~"$namespace", pod=~"$pod"}[%(grafanaIntervalVar)s]))' % $._config)
           + prometheus.withLegendFormat('__auto'),
         ]),
 
         tsPanel.new('Rate of Transmitted Packets')
         + tsPanel.standardOptions.withUnit('pps')
         + tsPanel.queryOptions.withTargets([
-          prometheus.new('${datasource}', 'sum(rate(container_network_transmit_packets_total{%(clusterLabel)s="$cluster",namespace=~"$namespace", pod=~"$pod"}[%(grafanaIntervalVar)s])) by (pod)' % $._config)
+          prometheus.new('${datasource}', 'sum by (pod) (rate(container_network_transmit_packets_total{%(clusterLabel)s="$cluster",namespace=~"$namespace", pod=~"$pod"}[%(grafanaIntervalVar)s]))' % $._config)
           + prometheus.withLegendFormat('__auto'),
         ]),
 
         tsPanel.new('Rate of Received Packets Dropped')
         + tsPanel.standardOptions.withUnit('pps')
         + tsPanel.queryOptions.withTargets([
-          prometheus.new('${datasource}', 'sum(rate(container_network_receive_packets_dropped_total{%(clusterLabel)s="$cluster",namespace=~"$namespace", pod=~"$pod"}[%(grafanaIntervalVar)s])) by (pod)' % $._config)
+          prometheus.new('${datasource}', 'sum by (pod) (rate(container_network_receive_packets_dropped_total{%(clusterLabel)s="$cluster",namespace=~"$namespace", pod=~"$pod"}[%(grafanaIntervalVar)s]))' % $._config)
           + prometheus.withLegendFormat('__auto'),
         ]),
 
         tsPanel.new('Rate of Transmitted Packets Dropped')
         + tsPanel.standardOptions.withUnit('pps')
         + tsPanel.queryOptions.withTargets([
-          prometheus.new('${datasource}', 'sum(rate(container_network_transmit_packets_dropped_total{%(clusterLabel)s="$cluster",namespace=~"$namespace", pod=~"$pod"}[%(grafanaIntervalVar)s])) by (pod)' % $._config)
+          prometheus.new('${datasource}', 'sum by (pod) (rate(container_network_transmit_packets_dropped_total{%(clusterLabel)s="$cluster",namespace=~"$namespace", pod=~"$pod"}[%(grafanaIntervalVar)s]))' % $._config)
           + prometheus.withLegendFormat('__auto'),
         ]),
       ];

@@ -43,7 +43,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum((avg by (%(clusterLabel)s) ( (avg by (%(clusterLabel)s, node) ( sum without (mode) ( rate(node_cpu_seconds_total{mode!=\"idle\",mode!=\"iowait\",mode!=\"steal\",%(nodeExporterSelector)s}[5m]) ) )) ))) / count((avg by (%(clusterLabel)s) ( (avg by (%(clusterLabel)s, node) ( sum without (mode) ( rate(node_cpu_seconds_total{mode!=\"idle\",mode!=\"iowait\",mode!=\"steal\",%(nodeExporterSelector)s}[5m]) ) )) )))",
+               "expr": "sum((avg by (cluster) ( (avg by (cluster, node) ( sum without (mode) ( rate(node_cpu_seconds_total{mode!=\"idle\",mode!=\"iowait\",mode!=\"steal\",job=\"node-exporter\"}[5m]) ) )) ))) / count((avg by (cluster) ( (avg by (cluster, node) ( sum without (mode) ( rate(node_cpu_seconds_total{mode!=\"idle\",mode!=\"iowait\",mode!=\"steal\",job=\"node-exporter\"}[5m]) ) )) )))",
                "instant": true
             }
          ],
@@ -148,7 +148,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "1 - sum((sum( node_memory_MemAvailable_bytes{job=\"node-exporter\"} or ( node_memory_Buffers_bytes{job=\"node-exporter\"} + node_memory_Cached_bytes{job=\"node-exporter\"} + node_memory_MemFree_bytes{job=\"node-exporter\"} + node_memory_Slab_bytes{job=\"node-exporter\"} ) ) by (cluster))) / sum(node_memory_MemTotal_bytes{job=\"node-exporter\"})",
+               "expr": "1 - sum by (cluster) (sum(node_memory_MemAvailable_bytes{job=\"node-exporter\"} or (node_memory_Buffers_bytes{job=\"node-exporter\"} + node_memory_Cached_bytes{job=\"node-exporter\"} + node_memory_MemFree_bytes{job=\"node-exporter\"} + node_memory_Slab_bytes{job=\"node-exporter\"}))) / sum(node_memory_MemTotal_bytes{job=\"node-exporter\"})",
                "instant": true
             }
          ],
@@ -263,7 +263,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum((sum by (cluster, namespace, pod, container) ( rate(container_cpu_usage_seconds_total{job=\"kubelet\", image!=\"\"}[5m]) ) * on (cluster, namespace, pod) group_left(node) topk by (cluster, namespace, pod) ( 1, max by(cluster, namespace, pod, node) (kube_pod_info{node!=\"\"}) ))) by (cluster)",
+               "expr": "sum by (cluster) (sum by (cluster, namespace, pod, container) (rate(container_cpu_usage_seconds_total{job=\"kubelet\", image!=\"\"}[5m])) * on (cluster, namespace, pod) group_left(node) topk by (cluster, namespace, pod) (1, max by(cluster, namespace, pod, node) (kube_pod_info{node!=\"\"})))",
                "legendFormat": "__auto"
             }
          ],
@@ -322,7 +322,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum((sum by (cluster, namespace, pod, container) ( rate(container_cpu_usage_seconds_total{job=\"kubelet\", image!=\"\"}[5m]) ) * on (cluster, namespace, pod) group_left(node) topk by (cluster, namespace, pod) ( 1, max by(cluster, namespace, pod, node) (kube_pod_info{node!=\"\"}) ))) by (cluster)",
+               "expr": "sum by (cluster) (sum by (cluster, namespace, pod, container) (rate(container_cpu_usage_seconds_total{job=\"kubelet\", image!=\"\"}[5m])) * on (cluster, namespace, pod) group_left(node) topk by (cluster, namespace, pod) (1, max by(cluster, namespace, pod, node) (kube_pod_info{node!=\"\"})))",
                "format": "table",
                "instant": true
             },
@@ -331,7 +331,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(kube_pod_container_resource_requests{job=\"kube-state-metrics\", resource=\"cpu\"}) by (cluster)",
+               "expr": "sum by (cluster) (kube_pod_container_resource_requests{job=\"kube-state-metrics\", resource=\"cpu\"})",
                "format": "table",
                "instant": true
             },
@@ -340,7 +340,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum((sum by (cluster, namespace, pod, container) ( rate(container_cpu_usage_seconds_total{job=\"kubelet\", image!=\"\"}[5m]) ) * on (cluster, namespace, pod) group_left(node) topk by (cluster, namespace, pod) ( 1, max by(cluster, namespace, pod, node) (kube_pod_info{node!=\"\"}) ))) by (cluster) / sum(kube_pod_container_resource_requests{job=\"kube-state-metrics\", resource=\"cpu\"}) by (cluster)",
+               "expr": "sum by (cluster) (sum by (cluster, namespace, pod, container) (rate(container_cpu_usage_seconds_total{job=\"kubelet\", image!=\"\"}[5m])) * on (cluster, namespace, pod) group_left(node) topk by (cluster, namespace, pod) (1, max by(cluster, namespace, pod, node) (kube_pod_info{node!=\"\"}))) / sum by (cluster) (kube_pod_container_resource_requests{job=\"kube-state-metrics\", resource=\"cpu\"})",
                "format": "table",
                "instant": true
             },
@@ -349,7 +349,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(kube_pod_container_resource_limits{job=\"kube-state-metrics\", resource=\"cpu\"}) by (cluster)",
+               "expr": "sum by (cluster) (kube_pod_container_resource_limits{job=\"kube-state-metrics\", resource=\"cpu\"})",
                "format": "table",
                "instant": true
             },
@@ -358,7 +358,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum((sum by (cluster, namespace, pod, container) ( rate(container_cpu_usage_seconds_total{job=\"kubelet\", image!=\"\"}[5m]) ) * on (cluster, namespace, pod) group_left(node) topk by (cluster, namespace, pod) ( 1, max by(cluster, namespace, pod, node) (kube_pod_info{node!=\"\"}) ))) by (cluster) / sum(kube_pod_container_resource_limits{job=\"kube-state-metrics\", resource=\"cpu\"}) by (cluster)",
+               "expr": "sum by (cluster) (sum by (cluster, namespace, pod, container) (rate(container_cpu_usage_seconds_total{job=\"kubelet\", image!=\"\"}[5m])) * on (cluster, namespace, pod) group_left(node) topk by (cluster, namespace, pod) (1, max by(cluster, namespace, pod, node) (kube_pod_info{node!=\"\"}))) / sum by (cluster) (kube_pod_container_resource_limits{job=\"kube-state-metrics\", resource=\"cpu\"})",
                "format": "table",
                "instant": true
             }
@@ -448,7 +448,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(container_memory_rss{job=\"kubelet\", container!=\"\"}) by (cluster)",
+               "expr": "sum by (cluster) (container_memory_rss{job=\"kubelet\", container!=\"\"})",
                "legendFormat": "__auto"
             }
          ],
@@ -510,7 +510,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(container_memory_rss{job=\"kubelet\", container!=\"\"}) by (cluster)",
+               "expr": "sum by (cluster) (container_memory_rss{job=\"kubelet\", container!=\"\"})",
                "format": "table",
                "instant": true
             },
@@ -519,7 +519,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(kube_pod_container_resource_requests{job=\"kube-state-metrics\", resource=\"memory\"}) by (cluster)",
+               "expr": "sum by (cluster) (kube_pod_container_resource_requests{job=\"kube-state-metrics\", resource=\"memory\"})",
                "format": "table",
                "instant": true
             },
@@ -528,7 +528,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(container_memory_rss{job=\"kubelet\", container!=\"\"}) by (cluster) / sum(kube_pod_container_resource_requests{job=\"kube-state-metrics\", resource=\"memory\"}) by (cluster)",
+               "expr": "sum by (cluster) (container_memory_rss{job=\"kubelet\", container!=\"\"}) / sum by (cluster) (kube_pod_container_resource_requests{job=\"kube-state-metrics\", resource=\"memory\"})",
                "format": "table",
                "instant": true
             },
@@ -537,7 +537,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(kube_pod_container_resource_limits{job=\"kube-state-metrics\", resource=\"memory\"}) by (cluster)",
+               "expr": "sum by (cluster) (kube_pod_container_resource_limits{job=\"kube-state-metrics\", resource=\"memory\"})",
                "format": "table",
                "instant": true
             },
@@ -546,7 +546,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum(container_memory_rss{job=\"kubelet\", container!=\"\"}) by (cluster) / sum(kube_pod_container_resource_limits{job=\"kube-state-metrics\", resource=\"memory\"}) by (cluster)",
+               "expr": "sum by (cluster) (container_memory_rss{job=\"kubelet\", container!=\"\"}) / sum by (cluster) (kube_pod_container_resource_limits{job=\"kube-state-metrics\", resource=\"memory\"})",
                "format": "table",
                "instant": true
             }
