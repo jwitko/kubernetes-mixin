@@ -72,7 +72,7 @@ local var = g.dashboard.variable;
           + var.query.withDatasourceFromVariable(self.datasource)
           + var.query.queryTypes.withLabelValues(
             'workload',
-            '(max by (%(clusterLabel)s, namespace, workload, pod) ( label_replace( kube_pod_owner{%(kubeStateMetricsSelector)s, owner_kind="Job"}, "workload", "$1", "owner_name", "(.*)" ) )){%(clusterLabel)s="$cluster", namespace=~"$namespace", workload=~".+"}' % $._config,
+            'max by (%(clusterLabel)s, namespace, workload, pod) (label_replace(kube_pod_owner{%(kubeStateMetricsSelector)s, owner_kind="Job", %(clusterLabel)s="$cluster", namespace=~"$namespace", workload=~".+"}, "workload", "$1", "owner_name", "(.*)"))' % $._config,
           )
           + var.query.generalOptions.withLabel('workload')
           + var.query.refresh.onTime()
@@ -85,7 +85,7 @@ local var = g.dashboard.variable;
           + var.query.withDatasourceFromVariable(self.datasource)
           + var.query.queryTypes.withLabelValues(
             'workload_type',
-            '(max by (%(clusterLabel)s, namespace, workload, pod) ( label_replace( kube_pod_owner{%(kubeStateMetricsSelector)s, owner_kind="Job"}, "workload", "$1", "owner_name", "(.*)" ) )){%(clusterLabel)s="$cluster", namespace=~"$namespace", workload=~"$workload"}' % $._config,
+            'max by (%(clusterLabel)s, namespace, workload, pod) (label_replace(kube_pod_owner{%(kubeStateMetricsSelector)s, owner_kind="Job", %(clusterLabel)s="$cluster", namespace=~"$namespace", workload=~"$workload"}, "workload", "$1", "owner_name", "(.*)"))' % $._config,
           )
           + var.query.generalOptions.withLabel('workload_type')
           + var.query.refresh.onTime()
@@ -103,7 +103,7 @@ local var = g.dashboard.variable;
         + barGauge.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'sort_desc(sum by (pod) (rate(container_network_receive_bytes_total{job="kubelet", %(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s]) * on (namespace,pod) group_left(workload,workload_type) max by (%(clusterLabel)s, namespace, workload, pod) ( label_replace( kube_pod_owner{job="kube-state-metrics", owner_kind="Job", %(clusterLabel)s="$cluster",namespace=~"$namespace", workload=~"$workload", workload_type=~"$type"}, "workload", "$1", "owner_name", "(.*)" ) )))' % $._config
+            'sort_desc(sum by(pod) (rate(container_network_receive_bytes_total{job="kubelet", %(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s]) * on (namespace,pod) group_left(workload,workload_type) max by(%(clusterLabel)s, namespace, workload, pod) (label_replace(kube_pod_owner{job="kube-state-metrics", owner_kind="Job", %(clusterLabel)s="$cluster",namespace=~"$namespace", workload=~"$workload", workload_type=~"$type"}, "workload", "$1", "owner_name", "(.*)"))))' % $._config
           )
           + prometheus.withLegendFormat('__auto'),
         ]),
@@ -117,7 +117,7 @@ local var = g.dashboard.variable;
         + barGauge.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'sort_desc(sum by (pod) (rate(container_network_transmit_bytes_total{job="kubelet", %(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s]) * on (namespace,pod) group_left(workload,workload_type) max by (%(clusterLabel)s, namespace, workload, pod) ( label_replace( kube_pod_owner{job="kube-state-metrics", owner_kind="Job", %(clusterLabel)s="$cluster",namespace=~"$namespace", workload=~"$workload", workload_type=~"$type"}, "workload", "$1", "owner_name", "(.*)" ) )))' % $._config
+            'sort_desc(sum by(pod) (rate(container_network_transmit_bytes_total{job="kubelet", %(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s]) * on (namespace,pod) group_left(workload,workload_type) max by(%(clusterLabel)s, namespace, workload, pod) (label_replace(kube_pod_owner{job="kube-state-metrics", owner_kind="Job", %(clusterLabel)s="$cluster",namespace=~"$namespace", workload=~"$workload", workload_type=~"$type"}, "workload", "$1", "owner_name", "(.*)"))))' % $._config
           )
           + prometheus.withLegendFormat('__auto'),
         ]),
@@ -131,7 +131,7 @@ local var = g.dashboard.variable;
         + barGauge.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'sort_desc(avg by (pod) (rate(container_network_receive_bytes_total{job="kubelet", %(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s]) * on (namespace,pod) group_left(workload,workload_type) max by (%(clusterLabel)s, namespace, workload, pod) ( label_replace( kube_pod_owner{job="kube-state-metrics", owner_kind="Job", %(clusterLabel)s="$cluster",namespace=~"$namespace", workload=~"$workload", workload_type=~"$type"}, "workload", "$1", "owner_name", "(.*)" ) )))' % $._config
+            'sort_desc(avg by(pod) (rate(container_network_receive_bytes_total{job="kubelet", %(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s]) * on (namespace,pod) group_left(workload,workload_type) max by(%(clusterLabel)s, namespace, workload, pod) (label_replace(kube_pod_owner{job="kube-state-metrics", owner_kind="Job", %(clusterLabel)s="$cluster",namespace=~"$namespace", workload=~"$workload", workload_type=~"$type"}, "workload", "$1", "owner_name", "(.*)"))))' % $._config
           )
           + prometheus.withLegendFormat('__auto'),
         ]),
@@ -145,7 +145,7 @@ local var = g.dashboard.variable;
         + barGauge.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'sort_desc(avg by (pod) (rate(container_network_transmit_bytes_total{job="kubelet", %(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s]) * on (namespace,pod) group_left(workload,workload_type) max by (%(clusterLabel)s, namespace, workload, pod) ( label_replace( kube_pod_owner{job="kube-state-metrics", owner_kind="Job", %(clusterLabel)s="$cluster",namespace=~"$namespace", workload=~"$workload", workload_type=~"$type"}, "workload", "$1", "owner_name", "(.*)" ) )))' % $._config
+            'sort_desc(avg by(pod) (rate(container_network_transmit_bytes_total{job="kubelet", %(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s]) * on (namespace,pod) group_left(workload,workload_type) max by(%(clusterLabel)s, namespace, workload, pod) (label_replace(kube_pod_owner{job="kube-state-metrics", owner_kind="Job", %(clusterLabel)s="$cluster",namespace=~"$namespace", workload=~"$workload", workload_type=~"$type"}, "workload", "$1", "owner_name", "(.*)"))))' % $._config
           )
           + prometheus.withLegendFormat('__auto'),
         ]),
@@ -155,7 +155,7 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'sort_desc(sum by (pod) (rate(container_network_receive_bytes_total{job="kubelet", %(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s]) * on (namespace,pod) group_left(workload,workload_type) max by (%(clusterLabel)s, namespace, workload, pod) ( label_replace( kube_pod_owner{job="kube-state-metrics", owner_kind="Job", %(clusterLabel)s="$cluster",namespace=~"$namespace", workload=~"$workload", workload_type=~"$type"}, "workload", "$1", "owner_name", "(.*)" ) )))' % $._config
+            'sort_desc(sum by(pod) (rate(container_network_receive_bytes_total{job="kubelet", %(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s]) * on (namespace,pod) group_left(workload,workload_type) max by(%(clusterLabel)s, namespace, workload, pod) (label_replace(kube_pod_owner{job="kube-state-metrics", owner_kind="Job", %(clusterLabel)s="$cluster",namespace=~"$namespace", workload=~"$workload", workload_type=~"$type"}, "workload", "$1", "owner_name", "(.*)"))))' % $._config
           )
           + prometheus.withLegendFormat('__auto'),
         ]),
@@ -165,7 +165,7 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'sort_desc(sum by (pod) (rate(container_network_transmit_bytes_total{job="kubelet", %(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s]) * on (namespace,pod) group_left(workload,workload_type) max by (%(clusterLabel)s, namespace, workload, pod) ( label_replace( kube_pod_owner{job="kube-state-metrics", owner_kind="Job", %(clusterLabel)s="$cluster",namespace=~"$namespace", workload=~"$workload", workload_type=~"$type"}, "workload", "$1", "owner_name", "(.*)" ) )))' % $._config
+            'sort_desc(sum by(pod) (rate(container_network_transmit_bytes_total{job="kubelet", %(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s]) * on (namespace,pod) group_left(workload,workload_type) max by(%(clusterLabel)s, namespace, workload, pod) (label_replace(kube_pod_owner{job="kube-state-metrics", owner_kind="Job", %(clusterLabel)s="$cluster",namespace=~"$namespace", workload=~"$workload", workload_type=~"$type"}, "workload", "$1", "owner_name", "(.*)"))))' % $._config
           )
           + prometheus.withLegendFormat('__auto'),
         ]),
@@ -175,7 +175,7 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'sort_desc(sum by (pod) (rate(container_network_receive_packets_total{job="kubelet", %(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s]) * on (namespace,pod) group_left(workload,workload_type) max by (%(clusterLabel)s, namespace, workload, pod) ( label_replace( kube_pod_owner{job="kube-state-metrics", owner_kind="Job", %(clusterLabel)s="$cluster",namespace=~"$namespace", workload=~"$workload", workload_type=~"$type"}, "workload", "$1", "owner_name", "(.*)" ) )))' % $._config
+            'sort_desc(sum by(pod) (rate(container_network_receive_packets_total{job="kubelet", %(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s]) * on (namespace,pod) group_left(workload,workload_type) max by(%(clusterLabel)s, namespace, workload, pod) (label_replace(kube_pod_owner{job="kube-state-metrics", owner_kind="Job", %(clusterLabel)s="$cluster",namespace=~"$namespace", workload=~"$workload", workload_type=~"$type"}, "workload", "$1", "owner_name", "(.*)"))))' % $._config
           )
           + prometheus.withLegendFormat('__auto'),
         ]),
@@ -185,7 +185,7 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'sort_desc(sum by (pod) (rate(container_network_transmit_packets_total{job="kubelet", %(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s]) * on (namespace,pod) group_left(workload,workload_type) max by (%(clusterLabel)s, namespace, workload, pod) ( label_replace( kube_pod_owner{job="kube-state-metrics", owner_kind="Job", %(clusterLabel)s="$cluster",namespace=~"$namespace", workload=~"$workload", workload_type=~"$type"}, "workload", "$1", "owner_name", "(.*)" ) )))' % $._config
+            'sort_desc(sum by(pod) (rate(container_network_transmit_packets_total{job="kubelet", %(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s]) * on (namespace,pod) group_left(workload,workload_type) max by(%(clusterLabel)s, namespace, workload, pod) (label_replace(kube_pod_owner{job="kube-state-metrics", owner_kind="Job", %(clusterLabel)s="$cluster",namespace=~"$namespace", workload=~"$workload", workload_type=~"$type"}, "workload", "$1", "owner_name", "(.*)"))))' % $._config
           )
           + prometheus.withLegendFormat('__auto'),
         ]),
@@ -195,7 +195,7 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'sort_desc(sum by (pod) (rate(container_network_receive_packets_dropped_total{job="kubelet", %(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s]) * on (namespace,pod) group_left(workload,workload_type) max by (%(clusterLabel)s, namespace, workload, pod) ( label_replace( kube_pod_owner{job="kube-state-metrics", owner_kind="Job", %(clusterLabel)s="$cluster",namespace=~"$namespace", workload=~"$workload", workload_type=~"$type"}, "workload", "$1", "owner_name", "(.*)" ) )))' % $._config
+            'sort_desc(sum by(pod) (rate(container_network_receive_packets_dropped_total{job="kubelet", %(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s]) * on (namespace,pod) group_left(workload,workload_type) max by(%(clusterLabel)s, namespace, workload, pod) (label_replace(kube_pod_owner{job="kube-state-metrics", owner_kind="Job", %(clusterLabel)s="$cluster",namespace=~"$namespace", workload=~"$workload", workload_type=~"$type"}, "workload", "$1", "owner_name", "(.*)"))))' % $._config
           )
           + prometheus.withLegendFormat('__auto'),
         ]),
@@ -205,7 +205,7 @@ local var = g.dashboard.variable;
         + tsPanel.queryOptions.withTargets([
           prometheus.new(
             '${datasource}',
-            'sort_desc(sum by (pod) (rate(container_network_transmit_packets_dropped_total{job="kubelet", %(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s]) * on (namespace,pod) group_left(workload,workload_type) max by (%(clusterLabel)s, namespace, workload, pod) ( label_replace( kube_pod_owner{job="kube-state-metrics", owner_kind="Job", %(clusterLabel)s="$cluster",namespace=~"$namespace", workload=~"$workload", workload_type=~"$type"}, "workload", "$1", "owner_name", "(.*)" ) )))' % $._config
+            'sort_desc(sum by(pod) (rate(container_network_transmit_packets_dropped_total{job="kubelet", %(clusterLabel)s="$cluster",namespace=~"$namespace"}[%(grafanaIntervalVar)s]) * on (namespace,pod) group_left(workload,workload_type) max by(%(clusterLabel)s, namespace, workload, pod) (label_replace(kube_pod_owner{job="kube-state-metrics", owner_kind="Job", %(clusterLabel)s="$cluster",namespace=~"$namespace", workload=~"$workload", workload_type=~"$type"}, "workload", "$1", "owner_name", "(.*)"))))' % $._config
           )
           + prometheus.withLegendFormat('__auto'),
         ]),

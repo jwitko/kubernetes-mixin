@@ -84,6 +84,8 @@ local var = g.dashboard.variable;
       local memRequestsQuery = std.strReplace(cpuRequestsQuery, 'cpu', 'memory');
       local memLimitsQuery = std.strReplace(cpuLimitsQuery, 'cpu', 'memory');
 
+      local cpuUsageQuery = 'sum by (container) (sum by (%(clusterLabel)s, namespace, pod, container) (rate(container_cpu_usage_seconds_total{%(cadvisorSelector)s, image!="", %(clusterLabel)s="$cluster", namespace="$namespace", pod="$pod", container!=""}[5m])) * on (%(clusterLabel)s, namespace, pod) group_left(node) topk by (%(clusterLabel)s, namespace, pod) (1, max by(%(clusterLabel)s, namespace, pod, node) (kube_pod_info{node!=""})))' % $._config;
+
       local panels = [
         tsPanel.new('CPU Usage')
         + tsPanel.gridPos.withW(24)
@@ -204,7 +206,7 @@ local var = g.dashboard.variable;
         table.new('CPU Quota')
         + table.gridPos.withW(24)
         + table.queryOptions.withTargets([
-          prometheus.new('${datasource}', 'sum by (container) (sum by (%(clusterLabel)s, namespace, pod, container) (rate(container_cpu_usage_seconds_total{%(cadvisorSelector)s, image!="", %(clusterLabel)s="$cluster", namespace="$namespace", pod="$pod", container!=""}[5m])) * on (%(clusterLabel)s, namespace, pod) group_left(node) topk by (%(clusterLabel)s, namespace, pod) (1, max by(%(clusterLabel)s, namespace, pod, node) (kube_pod_info{node!=""})))' % $._config)
+          prometheus.new('${datasource}', cpuUsageQuery)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
           prometheus.new('${datasource}', 'sum by (container) (kube_pod_container_resource_requests{resource="cpu", %(kubeStateMetricsSelector)s, %(clusterLabel)s="$cluster", namespace="$namespace", pod="$pod", container!=""} * on (namespace, pod, %(clusterLabel)s) group_left() max by (namespace, pod, %(clusterLabel)s) (kube_pod_status_phase{phase=~"Pending|Running"} == 1))' % $._config)

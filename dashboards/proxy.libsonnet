@@ -107,7 +107,7 @@ local var = g.dashboard.variable;
         tsPanel.new('Network Programming Latency 99th Quantile')
         + tsPanel.standardOptions.withUnit('s')
         + tsPanel.queryOptions.withTargets([
-          prometheus.new('${datasource}', 'histogram_quantile(0.99, sum by (instance, le) (rate(kubeproxy_network_programming_duration_seconds_bucket{%(clusterLabel)s="$cluster", %(kubeProxySelector)s, instance=~"$instance"}[%(grafanaIntervalVar)s])))' % $._config)
+          prometheus.new('${datasource}', 'histogram_quantile(0.99, sum by(instance, le) (rate(kubeproxy_network_programming_duration_seconds_bucket{%(clusterLabel)s="$cluster", %(kubeProxySelector)s, instance=~"$instance"}[%(grafanaIntervalVar)s])))' % $._config)
           + prometheus.withLegendFormat('{{instance}}'),
         ]),
 
@@ -132,7 +132,7 @@ local var = g.dashboard.variable;
         + tsPanel.gridPos.withW(16)
         + tsPanel.standardOptions.withUnit('ops')
         + tsPanel.queryOptions.withTargets([
-          prometheus.new('${datasource}', 'histogram_quantile(0.99, sum by (verb, le) (rate(rest_client_request_duration_seconds_bucket{%(clusterLabel)s="$cluster", %(kubeProxySelector)s,instance=~"$instance",verb="POST"}[%(grafanaIntervalVar)s])))' % $._config)
+          prometheus.new('${datasource}', 'histogram_quantile(0.99, sum by(verb, le) (rate(rest_client_request_duration_seconds_bucket{%(clusterLabel)s="$cluster", %(kubeProxySelector)s,instance=~"$instance",verb="POST"}[%(grafanaIntervalVar)s])))' % $._config)
           + prometheus.withLegendFormat('{{verb}}'),
         ]),
 
@@ -140,7 +140,7 @@ local var = g.dashboard.variable;
         + tsPanel.gridPos.withW(24)
         + tsPanel.standardOptions.withUnit('s')
         + tsPanel.queryOptions.withTargets([
-          prometheus.new('${datasource}', 'histogram_quantile(0.99, sum by (verb, le) (rate(rest_client_request_duration_seconds_bucket{%(clusterLabel)s="$cluster", %(kubeProxySelector)s, instance=~"$instance", verb="GET"}[%(grafanaIntervalVar)s])))' % $._config)
+          prometheus.new('${datasource}', 'histogram_quantile(0.99, sum by(verb, le) (rate(rest_client_request_duration_seconds_bucket{%(clusterLabel)s="$cluster", %(kubeProxySelector)s, instance=~"$instance", verb="GET"}[%(grafanaIntervalVar)s])))' % $._config)
           + prometheus.withLegendFormat('{{verb}}'),
         ]),
 
