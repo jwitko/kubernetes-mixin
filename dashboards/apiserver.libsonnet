@@ -91,19 +91,6 @@ local override = ts.standardOptions.override;
       + g.query.prometheus.withLegendFormat('{{ resource }}'),
     ]),
 
-  // This is the raw query that calculates the availability for a given day window
-  local availabilityQuery(verb, days) =
-    '1 - ( ( # too slow sum by (%(clusterLabel)s) (rate(apiserver_request_sli_duration_seconds_count{%(kubeApiserverSelector)s,verb=~"%(verb)s",%(kubeApiserverNonStreamingSelector)s}[%(window)sd])) - ( ( sum by (%(clusterLabel)s) (rate(apiserver_request_sli_duration_seconds_bucket{%(kubeApiserverSelector)s,verb=~"%(verb)s",%(kubeApiserverNonStreamingSelector)s,scope=~"resource|",le="%(readResourceLatency)s"}[%(window)sd])) or vector(0) ) + sum by (%(clusterLabel)s) (rate(apiserver_request_sli_duration_seconds_bucket{%(kubeApiserverSelector)s,verb=~"%(verb)s",%(kubeApiserverNonStreamingSelector)s,scope="namespace",le="%(readNamespaceLatency)s"}[%(window)sd])) + sum by (%(clusterLabel)s) (rate(apiserver_request_sli_duration_seconds_bucket{%(kubeApiserverSelector)s,verb=~"%(verb)s",%(kubeApiserverNonStreamingSelector)s,scope="cluster",le="%(readClusterLatency)s"}[%(window)sd])) ) ) + # errors sum by (%(clusterLabel)s) (rate(apiserver_request_total{%(kubeApiserverSelector)s,verb=~"%(verb)s",code=~"5.."}[%(window)sd])) ) / sum by (%(clusterLabel)s) (rate(apiserver_request_total{%(kubeApiserverSelector)s,verb=~"%(verb)s"}[%(window)sd]))' % {
-      clusterLabel: $._config.clusterLabel,
-      kubeApiserverSelector: $._config.kubeApiserverSelector,
-      kubeApiserverNonStreamingSelector: $._config.kubeApiserverNonStreamingSelector,
-      verb: verb,
-      readResourceLatency: $._config.kubeApiserverReadResourceLatency,
-      readNamespaceLatency: $._config.kubeApiserverReadNamespaceLatency,
-      readClusterLatency: $._config.kubeApiserverReadClusterLatency,
-      window: days,
-    },
-
   grafanaDashboards+:: {
     'apiserver.json':
       local panels = {

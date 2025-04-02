@@ -1,7 +1,5 @@
 // Import the main mixin which aggregates everything
 local mixin = import '../mixin.libsonnet';
-// Import utils for helper functions
-local utils = import '../lib/utils.libsonnet';
 
 // Make sure configuration has necessary defaults
 local config = mixin._config {
@@ -41,6 +39,15 @@ local cleanGroupName(name) =
 local compactJSON(json) =
   std.strReplace(std.strReplace(std.strReplace(json, '\n', ''), '  ', ''), ': ', ':');
 
+// Check if the prometheusRules exist
+local hasRules = std.objectHas(mixin, 'prometheusRules');
+
+// Define prometheusGroups safely
+local prometheusGroups = 
+  if !hasRules then []
+  else if !std.objectHas(std.get(mixin, 'prometheusRules', {}), 'groups') then []
+  else std.get(std.get(mixin, 'prometheusRules', {}), 'groups', []);
+
 // Create a separate file for each rule group that contains recording rules
 {
   [cleanGroupName(group.name) + '.json']: compactJSON(std.manifestJson({
@@ -52,6 +59,6 @@ local compactJSON(json) =
       if std.objectHas(rule, 'record')  // Only include recording rules
     ],
   }))  // Compact the JSON output
-  for group in mixin.prometheusRules.groups
+  for group in prometheusGroups
   if std.length([rule for rule in group.rules if std.objectHas(rule, 'record')]) > 0  // Only include groups that have recording rules
 }

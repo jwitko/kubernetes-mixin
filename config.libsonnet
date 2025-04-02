@@ -113,5 +113,96 @@
 
     // Default timeout value for k8s Jobs. The jobs which are active beyond this duration would trigger KubeJobNotCompleted alert.
     kubeJobTimeoutDuration: 12 * 60 * 60,
+
+    // Define workload type label expressions that replace recording rules
+    // These replace the namespace_workload_pod:kube_pod_owner:relabel recording rule
+    workloadLabelQueries:: {
+      deployment: |||
+        max by (%(clusterLabel)s, namespace, workload, pod) (
+          label_replace(
+            label_replace(
+              kube_pod_owner{%(kubeStateMetricsSelector)s, owner_kind="ReplicaSet"},
+              "replicaset", "$1", "owner_name", ".*"
+            ) * on(replicaset, namespace) group_left(owner_name) topk by(replicaset, namespace) (
+              1, max by (replicaset, namespace, owner_name) (
+                kube_replicaset_owner{%(kubeStateMetricsSelector)s}
+              )
+            ),
+            "workload", "$1", "owner_name", ".*"
+          )
+        )
+      ||| % $._config,
+      
+      daemonset: |||
+        max by (%(clusterLabel)s, namespace, workload, pod) (
+          label_replace(
+            kube_pod_owner{%(kubeStateMetricsSelector)s, owner_kind="DaemonSet"},
+            "workload", "$1", "owner_name", ".*"
+          )
+        )
+      ||| % $._config,
+      
+      statefulset: |||
+        max by (%(clusterLabel)s, namespace, workload, pod) (
+          label_replace(
+            kube_pod_owner{%(kubeStateMetricsSelector)s, owner_kind="StatefulSet"},
+            "workload", "$1", "owner_name", ".*"
+          )
+        )
+      ||| % $._config,
+      
+      job: |||
+        max by (%(clusterLabel)s, namespace, workload, pod) (
+          label_replace(
+            kube_pod_owner{%(kubeStateMetricsSelector)s, owner_kind="Job"},
+            "workload", "$1", "owner_name", ".*"
+          )
+        )
+      ||| % $._config,
+      
+      // Combined query for all workload types
+      all: |||
+        (
+          max by (%(clusterLabel)s, namespace, workload, pod) (
+            label_replace(
+              label_replace(
+                kube_pod_owner{%(kubeStateMetricsSelector)s, owner_kind="ReplicaSet"},
+                "replicaset", "$1", "owner_name", ".*"
+              ) * on(replicaset, namespace) group_left(owner_name) topk by(replicaset, namespace) (
+                1, max by (replicaset, namespace, owner_name) (
+                  kube_replicaset_owner{%(kubeStateMetricsSelector)s}
+                )
+              ),
+              "workload", "$1", "owner_name", ".*"
+            )
+          ) * on(%(clusterLabel)s, namespace, workload, pod) group_left(workload_type) 
+          label_replace(vector(1), "workload_type", "deployment", "", "")
+        ) or (
+          max by (%(clusterLabel)s, namespace, workload, pod) (
+            label_replace(
+              kube_pod_owner{%(kubeStateMetricsSelector)s, owner_kind="DaemonSet"},
+              "workload", "$1", "owner_name", ".*"
+            )
+          ) * on(%(clusterLabel)s, namespace, workload, pod) group_left(workload_type) 
+          label_replace(vector(1), "workload_type", "daemonset", "", "")
+        ) or (
+          max by (%(clusterLabel)s, namespace, workload, pod) (
+            label_replace(
+              kube_pod_owner{%(kubeStateMetricsSelector)s, owner_kind="StatefulSet"},
+              "workload", "$1", "owner_name", ".*"
+            )
+          ) * on(%(clusterLabel)s, namespace, workload, pod) group_left(workload_type) 
+          label_replace(vector(1), "workload_type", "statefulset", "", "")
+        ) or (
+          max by (%(clusterLabel)s, namespace, workload, pod) (
+            label_replace(
+              kube_pod_owner{%(kubeStateMetricsSelector)s, owner_kind="Job"},
+              "workload", "$1", "owner_name", ".*"
+            )
+          ) * on(%(clusterLabel)s, namespace, workload, pod) group_left(workload_type) 
+          label_replace(vector(1), "workload_type", "job", "", "")
+        )
+      ||| % $._config,
+    },
   },
 }

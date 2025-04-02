@@ -1,7 +1,5 @@
 // Import the main mixin which aggregates everything
 local mixin = import '../mixin.libsonnet';
-// Import utils for helper functions if needed (e.g., accessing config)
-local utils = import '../lib/utils.libsonnet';
 
 // Make sure showMultiCluster exists in the configuration
 local config = mixin._config {

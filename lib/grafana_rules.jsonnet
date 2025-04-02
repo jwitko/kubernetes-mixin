@@ -1,7 +1,5 @@
 // Import the main mixin which aggregates everything
 local mixin = import '../mixin.libsonnet';
-// Import utils for helper functions
-local utils = import '../lib/utils.libsonnet';
 
 // Make sure configuration has necessary defaults
 local config = mixin._config {
@@ -28,6 +26,15 @@ local convertRecordingRule(rule, config) = {
   [if std.objectHas(rule, 'labels') && std.length(std.objectFields(rule.labels)) > 0 then 'labels']: rule.labels,
 };
 
+// Check if the prometheusRules exist
+local hasRules = std.objectHas(mixin, 'prometheusRules');
+
+// Define prometheusGroups safely
+local prometheusGroups = 
+  if !hasRules then []
+  else if !std.objectHas(std.get(mixin, 'prometheusRules', {}), 'groups') then []
+  else std.get(std.get(mixin, 'prometheusRules', {}), 'groups', []);
+
 // Create Grafana recording rules by processing each group in the Prometheus rules
 local grafanaRules = [
   {
@@ -39,7 +46,7 @@ local grafanaRules = [
       if std.objectHas(rule, 'record')  // Only include recording rules
     ],
   }
-  for group in mixin.prometheusRules.groups
+  for group in prometheusGroups
   if std.length([rule for rule in group.rules if std.objectHas(rule, 'record')]) > 0  // Only include groups that have recording rules
 ];
 

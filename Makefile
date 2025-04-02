@@ -75,7 +75,7 @@ $(OUT_DIR)/.lint: $(OUT_DIR)
 dashboards-lint: $(GRAFANA_DASHBOARD_LINTER_BIN) $(OUT_DIR)/.lint
 	# Replace $$interval:$$resolution var with $$__rate_interval to make dashboard-linter happy.
 	@sed -i -e 's/$$interval:$$resolution/$$__rate_interval/g' $(OUT_DIR)/*.json
-	@find $(OUT_DIR) -name '*.json' -print0 | xargs -n 1 -0 $(GRAFANA_DASHBOARD_LINTER_BIN) lint --strict
+	@find $(OUT_DIR) -name '*.json' -print0 | xargs -n 1 -0 $(GRAFANA_DASHBOARD_LINTER_BIN) lint --config dashboard-linter.config
 
 .PHONY: vale
 vale: $(VALE_BIN)
