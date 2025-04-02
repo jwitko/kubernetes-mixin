@@ -86,6 +86,55 @@ def fix_misplaced_filters(expr):
                 
                 return ''.join(expr_parts)
     
+    # Fix any "unexpected by" errors - ensure by clause is correctly positioned
+    # Pattern to match incorrectly positioned 'by' clauses
+    by_pattern = r'([^\s,]+)\s+by\s*\('
+    by_match = re.search(by_pattern, expr)
+    if by_match:
+        # Check if the preceding token isn't an aggregation function or has an incorrect filter placement
+        preceding_token = by_match.group(1)
+        if not re.match(r'(sum|avg|min|max|count|group|topk|bottomk)$', preceding_token):
+            # Try to find the aggregation function and move the 'by' clause to the correct position
+            agg_pattern = r'(sum|avg|min|max|count|group|topk|bottomk)\s*\('
+            agg_match = re.search(agg_pattern, expr)
+            if agg_match:
+                # Reconstruct with proper 'by' placement
+                agg_function = agg_match.group(1)
+                agg_start = expr.find(agg_function)
+                expr = expr[:agg_start] + agg_function + ' by' + expr[agg_start+len(agg_function):].replace(' by', '', 1)
+                return expr
+    
+    # Fix issues with parentheses at the beginning of expressions
+    # For example: (metric{filter}) by (label) could cause "unexpected ("
+    if expr.startswith('(') and not expr.startswith('(sum') and not expr.startswith('(avg') and not expr.startswith('(min') and not expr.startswith('(max'):
+        # Check if there's a by clause after the closing parenthesis
+        by_after_paren = re.search(r'\)\s+(by|group_by|without)\s*\(', expr)
+        if by_after_paren:
+            # Find the matching closing parenthesis
+            closing_idx = -1
+            stack = []
+            for i, char in enumerate(expr):
+                if char == '(':
+                    stack.append(i)
+                elif char == ')':
+                    if stack:
+                        opening_idx = stack.pop()
+                        if not stack:  # This is the outermost parenthesis
+                            closing_idx = i
+                            break
+            
+            if closing_idx > 0:
+                # Get the actual expression inside the parentheses
+                inner_expr = expr[1:closing_idx]
+                # Get what comes after the closing parenthesis
+                after_paren = expr[closing_idx+1:]
+                # Check if this looks like it should be an aggregation
+                if ' by' in after_paren:
+                    # Convert to a sum by or avg by depending on what seems most appropriate
+                    # Default to sum if not clear
+                    expr = 'sum' + after_paren + ' (' + inner_expr + ')'
+                    return expr
+    
     return expr
 
 def merge_filters(filter1, filter2):
