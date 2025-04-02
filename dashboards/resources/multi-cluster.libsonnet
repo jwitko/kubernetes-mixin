@@ -62,7 +62,7 @@ local var = g.dashboard.variable;
             statPanel(
               'CPU Utilisation',
               'none',
-              'sum((avg by (cluster) ( (avg by (cluster, node) ( sum without (mode) ( rate(node_cpu_seconds_total{mode!="idle",mode!="iowait",mode!="steal",%(nodeExporterSelector)s}[5m]) ) )) ))) / count((avg by (cluster) ( (avg by (cluster, node) ( sum without (mode) ( rate(node_cpu_seconds_total{mode!="idle",mode!="iowait",mode!="steal",%(nodeExporterSelector)s}[5m]) ) )) )))' % $._config
+              'sum(avg by (cluster) (avg by (cluster, node) (sum without (mode) (rate(node_cpu_seconds_total{mode!="idle",mode!="iowait",mode!="steal",%(nodeExporterSelector)s}[5m]))))) / count(avg by (cluster) (avg by (cluster, node) (sum without (mode) (rate(node_cpu_seconds_total{mode!="idle",mode!="iowait",mode!="steal",%(nodeExporterSelector)s}[5m])))))'  % $._config
             ),
 
             statPanel(

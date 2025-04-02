@@ -91,7 +91,7 @@ local var = g.dashboard.variable;
         statPanel(
           'CPU Utilisation (from requests)',
           'percentunit',
-          'sum((sum by (%(clusterLabel)s, namespace, pod, container) ( rate(container_cpu_usage_seconds_total{%(cadvisorSelector)s, image!="", %(clusterLabel)s="$cluster", namespace="$namespace"}[5m]) ) * on (%(clusterLabel)s, namespace, pod) group_left(node) topk by (%(clusterLabel)s, namespace, pod) ( 1, max by(%(clusterLabel)s, namespace, pod, node) (kube_pod_info{node!=""}) ))) / sum(kube_pod_container_resource_requests{%(kubeStateMetricsSelector)s, %(clusterLabel)s="$cluster", namespace="$namespace", resource="cpu"})' % $._config
+          'sum(sum by (%(clusterLabel)s, namespace, pod, container) (rate(container_cpu_usage_seconds_total{%(cadvisorSelector)s, image!="", %(clusterLabel)s="$cluster", namespace="$namespace"}[5m])) * on (%(clusterLabel)s, namespace, pod) group_left(node) topk by (%(clusterLabel)s, namespace, pod) (1, max by(%(clusterLabel)s, namespace, pod, node) (kube_pod_info{node!=""}))) / sum(kube_pod_container_resource_requests{%(kubeStateMetricsSelector)s, %(clusterLabel)s="$cluster", namespace="$namespace", resource="cpu"})' % $._config
         )
         + stat.gridPos.withW(6)
         + stat.gridPos.withH(3),
@@ -99,7 +99,7 @@ local var = g.dashboard.variable;
         statPanel(
           'CPU Utilisation (from limits)',
           'percentunit',
-          'sum((sum by (%(clusterLabel)s, namespace, pod, container) ( rate(container_cpu_usage_seconds_total{%(cadvisorSelector)s, image!="", %(clusterLabel)s="$cluster", namespace="$namespace"}[5m]) ) * on (%(clusterLabel)s, namespace, pod) group_left(node) topk by (%(clusterLabel)s, namespace, pod) ( 1, max by(%(clusterLabel)s, namespace, pod, node) (kube_pod_info{node!=""}) ))) / sum(kube_pod_container_resource_limits{%(kubeStateMetricsSelector)s, %(clusterLabel)s="$cluster", namespace="$namespace", resource="cpu"})' % $._config
+          'sum(sum by (%(clusterLabel)s, namespace, pod, container) (rate(container_cpu_usage_seconds_total{%(cadvisorSelector)s, image!="", %(clusterLabel)s="$cluster", namespace="$namespace"}[5m])) * on (%(clusterLabel)s, namespace, pod) group_left(node) topk by (%(clusterLabel)s, namespace, pod) (1, max by(%(clusterLabel)s, namespace, pod, node) (kube_pod_info{node!=""}))) / sum(kube_pod_container_resource_limits{%(kubeStateMetricsSelector)s, %(clusterLabel)s="$cluster", namespace="$namespace", resource="cpu"})' % $._config
         )
         + stat.gridPos.withW(6)
         + stat.gridPos.withH(3),

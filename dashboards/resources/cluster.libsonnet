@@ -136,11 +136,11 @@ local var = g.dashboard.variable;
 
         table.new('CPU Quota')
         + table.queryOptions.withTargets([
-          prometheus.new('${datasource}', 'sum(kube_pod_owner{%(kubeStateMetricsSelector)s, %(clusterLabel)s="$cluster"}) by (namespace)' % $._config)
+          prometheus.new('${datasource}', 'sum by (namespace) (kube_pod_owner{%(kubeStateMetricsSelector)s, %(clusterLabel)s="$cluster"})' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
-          prometheus.new('${datasource}', 'count by (namespace) (avg by (workload, namespace) (max by (%(clusterLabel)s, namespace, workload, pod) (label_replace(kube_pod_owner{%(kubeStateMetricsSelector)s, owner_kind="Job", %(clusterLabel)s="$cluster"}, "workload", "$1", "owner_name", "(.*)" ))))' % $._config)
+          prometheus.new('${datasource}', 'count by (namespace) (avg by (workload, namespace) (max by (%(clusterLabel)s, namespace, workload, pod) (label_replace(kube_pod_owner{%(kubeStateMetricsSelector)s, owner_kind="Job", %(clusterLabel)s="$cluster"}, "workload", "$1", "owner_name", ".*" ))))' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
@@ -253,11 +253,11 @@ local var = g.dashboard.variable;
 
         table.new('Memory Requests by Namespace')
         + table.queryOptions.withTargets([
-          prometheus.new('${datasource}', 'sum(kube_pod_owner{%(kubeStateMetricsSelector)s, %(clusterLabel)s="$cluster"}) by (namespace)' % $._config)
+          prometheus.new('${datasource}', 'sum by (namespace) (kube_pod_owner{%(kubeStateMetricsSelector)s, %(clusterLabel)s="$cluster"})' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 
-          prometheus.new('${datasource}', 'count by (namespace) (avg by (workload, namespace) (max by (%(clusterLabel)s, namespace, workload, pod) (label_replace(kube_pod_owner{%(kubeStateMetricsSelector)s, owner_kind="Job", %(clusterLabel)s="$cluster"}, "workload", "$1", "owner_name", "(.*)" ))))' % $._config)
+          prometheus.new('${datasource}', 'count by (namespace) (avg by (workload, namespace) (max by (%(clusterLabel)s, namespace, workload, pod) (label_replace(kube_pod_owner{%(kubeStateMetricsSelector)s, owner_kind="Job", %(clusterLabel)s="$cluster"}, "workload", "$1", "owner_name", ".*" ))))' % $._config)
           + prometheus.withInstant(true)
           + prometheus.withFormat('table'),
 

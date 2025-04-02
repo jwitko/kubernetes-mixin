@@ -154,6 +154,57 @@ def merge_filters(filter1, filter2):
     else:
         return '{' + content2 + '}'
 
+def fix_workload_expressions(expr):
+    """
+    Fix issues specific to workload-related expressions that cause parse errors in Grafana.
+    Specifically targets:
+    1. "unexpected (')" errors by properly escaping regex pattern in label_replace
+    2. "unexpected <by>" errors by fixing aggregation syntax
+    """
+    # Check if this is a workload-related expression
+    if 'workload' in expr and 'label_replace' in expr and 'owner_name' in expr:
+        # Fix regex pattern in label_replace - replace "(.*)" with ".*"
+        # This addresses the "unexpected (')" error
+        expr = re.sub(r'\"owner_name\",\s*\"\(\.\*\)\"', '"owner_name", ".*"', expr)
+        
+        # Ensure proper spacing around 'by' in aggregations to fix "unexpected <by>" errors
+        expr = re.sub(r'(sum|avg|min|max|count|topk|bottomk)\s*by\s*\(', r'\1 by (', expr)
+        
+        # Fix double parentheses that might occur
+        expr = expr.replace('))', ')')
+        
+        # Ensure proper spacing around operators
+        expr = re.sub(r'\s*\*\s*on\s*\(', r' * on (', expr)
+        expr = re.sub(r'\s*group_left\s*\(', r' group_left(', expr)
+        
+        # Fix any remaining unbalanced parentheses
+        open_count = expr.count('(')
+        close_count = expr.count(')')
+        if open_count > close_count:
+            expr += ')' * (open_count - close_count)
+    
+    return expr
+
+def fix_aggregation_syntax(expr):
+    """
+    Fix issues with PromQL aggregation syntax that cause parse errors in Grafana.
+    Specifically targets "sum by(sum (...)" patterns which are invalid.
+    """
+    # Fix invalid aggregation syntax like "sum by(sum (namespace, cluster) (...)"
+    if re.search(r'(sum|avg|min|max|count|topk|bottomk)\s+by\s*\(\s*(sum|avg|min|max|count|topk|bottomk)\s+\(', expr):
+        # Replace with correct aggregation syntax
+        expr = re.sub(
+            r'(sum|avg|min|max|count|topk|bottomk)\s+by\s*\(\s*(sum|avg|min|max|count|topk|bottomk)\s+\(([^)]+)\)\s*\(', 
+            r'\1(\2 by (\3) (', 
+            expr
+        )
+    
+    # Fix nested parentheses in by clause
+    if re.search(r'by\s*\(\s*\(', expr):
+        expr = re.sub(r'by\s*\(\s*\(([^)]+)\)\s*\)', r'by (\1)', expr)
+    
+    return expr
+
 def remove_newlines_from_expr(json_obj):
     """
     Recursively traverse the JSON object and remove newlines from "expr" fields.
@@ -173,6 +224,20 @@ def remove_newlines_from_expr(json_obj):
                 fixed_value = fix_misplaced_filters(new_value)
                 if fixed_value != new_value:
                     print(f"Fixed misplaced filter in expression: {new_value[:50]}...")
+                    new_value = fixed_value
+                    modified = True
+                
+                # Fix workload-specific issues
+                fixed_value = fix_workload_expressions(new_value)
+                if fixed_value != new_value:
+                    print(f"Fixed workload-specific issues in expression: {new_value[:50]}...")
+                    new_value = fixed_value
+                    modified = True
+                
+                # Fix aggregation syntax issues
+                fixed_value = fix_aggregation_syntax(new_value)
+                if fixed_value != new_value:
+                    print(f"Fixed aggregation syntax in expression: {new_value[:50]}...")
                     new_value = fixed_value
                     modified = True
                 

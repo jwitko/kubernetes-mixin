@@ -22,7 +22,7 @@ GRAFANA_RULES_OUT_DIR ?=grafana_rules_out
 all: fmt generate lint test
 
 .PHONY: generate
-generate: prometheus_alerts.yaml prometheus_rules.yaml $(OUT_DIR) $(GRAFANA_ALERTS_OUT_DIR) $(GRAFANA_RULES_OUT_DIR) cleanup-dashboards
+generate: prometheus_alerts.yaml $(OUT_DIR) $(GRAFANA_ALERTS_OUT_DIR) cleanup-dashboards
 
 .PHONY: cleanup-dashboards
 cleanup-dashboards: $(OUT_DIR)
@@ -47,18 +47,10 @@ markdownfmt: $(MARKDOWNFMT_BIN)
 prometheus_alerts.yaml: $(JSONNET_BIN) mixin.libsonnet lib/alerts.jsonnet alerts/*.libsonnet
 	@$(JSONNET_BIN) -J vendor -S lib/alerts.jsonnet > $@
 
-prometheus_rules.yaml: $(JSONNET_BIN) mixin.libsonnet lib/rules.jsonnet rules/*.libsonnet
-	@$(JSONNET_BIN) -J vendor -S lib/rules.jsonnet > $@
-
 # Target for generating Grafana alerts as separate files per group
 $(GRAFANA_ALERTS_OUT_DIR): $(JSONNET_BIN) mixin.libsonnet lib/grafana_alerts_split.jsonnet alerts/*.libsonnet
 	@mkdir -p $(GRAFANA_ALERTS_OUT_DIR)
 	@$(JSONNET_BIN) -J vendor -m $(GRAFANA_ALERTS_OUT_DIR) lib/grafana_alerts_split.jsonnet
-
-# Target for generating Grafana recording rules as separate files per group
-$(GRAFANA_RULES_OUT_DIR): $(JSONNET_BIN) mixin.libsonnet lib/grafana_rules_split.jsonnet rules/*.libsonnet
-	@mkdir -p $(GRAFANA_RULES_OUT_DIR)
-	@$(JSONNET_BIN) -J vendor -m $(GRAFANA_RULES_OUT_DIR) lib/grafana_rules_split.jsonnet
 
 $(OUT_DIR): $(JSONNET_BIN) $(JSONNET_VENDOR) mixin.libsonnet lib/dashboards.jsonnet $(SRC_DIR)/*.libsonnet
 	@mkdir -p $(OUT_DIR)
@@ -73,8 +65,7 @@ jsonnet-lint: $(JSONNETLINT_BIN) $(JSONNET_VENDOR)
 		xargs -n 1 -- $(JSONNETLINT_BIN) -J vendor
 
 .PHONY: alerts-lint
-alerts-lint: $(PROMTOOL_BIN) prometheus_alerts.yaml prometheus_rules.yaml
-	@$(PROMTOOL_BIN) check rules prometheus_rules.yaml
+alerts-lint: $(PROMTOOL_BIN) prometheus_alerts.yaml
 	@$(PROMTOOL_BIN) check rules prometheus_alerts.yaml
 
 $(OUT_DIR)/.lint: $(OUT_DIR)
@@ -94,7 +85,7 @@ vale: $(VALE_BIN)
 .PHONY: pint-lint
 pint-lint: generate $(PINT_BIN)
 	@# Pint will not exit with a non-zero status code if there are linting issues.
-	@output=$$($(PINT_BIN) -n -o -l WARN lint prometheus_alerts.yaml prometheus_rules.yaml 2>&1); \
+	@output=$$($(PINT_BIN) -n -o -l WARN lint prometheus_alerts.yaml 2>&1); \
 	if [ -n "$$output" ]; then \
 		echo "\n$$output"; \
 		exit 1; \
@@ -106,7 +97,7 @@ clean:
 	git clean -Xfd .
 
 .PHONY: test
-test: $(PROMTOOL_BIN) prometheus_alerts.yaml prometheus_rules.yaml
+test: $(PROMTOOL_BIN) prometheus_alerts.yaml
 	@$(PROMTOOL_BIN) test rules tests/*.yaml
 
 $(BIN_DIR):
